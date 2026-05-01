@@ -1,0 +1,13 @@
+{
+    "message_type": "wolf_chat",
+    "texts": [
+        {
+            "User": "つかはら",
+            "text": "以下のファイルは最近編集されたファイルです。削除されたコードは提案しないでください。\n\n- feature/game_night.feature\n- feature/role_expecter.feature\n- feature/role_wolf.feature\n- task.md"
+        },
+        {
+            "User": "つかはら",
+            "text": "これらのファイルは最近編集されたファイルです。削除されたコードは提案しないでください。\n\n- feature/game_night.feature\n- feature/role_expecter.feature\n- feature/role_wolf.feature\n- task.md"
+        }
+    ]
+}

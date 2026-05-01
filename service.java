@@ -1,0 +1,6 @@
+class CreateRoomService
+{
+    void call() {
+
+    }
+}
