@@ -1,15 +1,13 @@
 package src.message;
 
 public class HelloRequestMessage {
-    public String type = "hello";
+    public static final String MessageType = "hello";
+    public String message_type = MessageType;
     public String name;
 
-    public HelloRequestMessage(String name) {
-        this.name = name;
-    }
+    public HelloRequestMessage() {}
 
-    public HelloRequestMessage(String type, String name) {
-        this.type = type;
+    public HelloRequestMessage(String name) {
         this.name = name;
     }
 }

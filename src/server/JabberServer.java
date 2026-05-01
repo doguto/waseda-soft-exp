@@ -1,6 +1,8 @@
 package src.server;
 import java.io.*;
 import java.net.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import src.message.HelloRequestMessage;
 import src.message.HelloResponseMessage;
 import src.server.service.HelloService;
@@ -11,6 +13,7 @@ public class JabberServer {
     throws IOException { 
         ServerSocket s = new ServerSocket(PORT); // ソケットを作成する 
         System.out.println("Started: " + s); 
+        ObjectMapper mapper = new ObjectMapper();
         try { 
             Socket socket = s.accept(); // コネクション設定要求を待つ 
             try { 
@@ -25,12 +28,29 @@ public class JabberServer {
                 HelloService helloService = new HelloService();
                 while (true) {
                     String str = in.readLine(); // データの受信
-                    if(str.equals("END")) break;
+                    if(str == null || str.equals("END")) break;
 
-                    HelloRequestMessage request = new HelloRequestMessage(str);
-                    HelloResponseMessage response = helloService.call(request);
-                    System.out.println("Responding: " + response.greeting);
-                    out.println(response.greeting);  // データの送信
+                    JsonNode node = mapper.readTree(str);
+                    String messageType = node.has("message_type") ? node.get("message_type").asText() : null;
+                    
+                    if (messageType == null) {
+                        System.out.println("Unknown message format: " + str);
+                        continue;
+                    }
+
+                    switch (messageType) {
+                        case HelloRequestMessage.MessageType:
+                            HelloRequestMessage requestMsg = mapper.readValue(str, HelloRequestMessage.class);
+                            HelloResponseMessage responseMsg = helloService.call(requestMsg);
+                            
+                            String jsonResponse = mapper.writeValueAsString(responseMsg);
+                            System.out.println("Responding: " + jsonResponse);
+                            out.println(jsonResponse);  // データの送信
+                            break;
+                        default:
+                            System.out.println("Unsupported message type: " + messageType);
+                            break;
+                    }
                 }
             } finally { 
                 System.out.println("closing..."); 

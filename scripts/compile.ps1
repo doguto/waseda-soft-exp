@@ -15,7 +15,7 @@ $javaFiles = Get-ChildItem -Path $srcDir -Filter *.java -Recurse | Select-Object
 if ($javaFiles) {
     Write-Host "Compiling $($javaFiles.Count) files..."
     # Running javac from the project root to ensure package 'src.xxx' is resolved correctly
-    javac -d $outDir -cp . $javaFiles
+    javac -d $outDir -cp ".;lib/*" $javaFiles
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Compilation successful! Classes are in $outDir" -ForegroundColor Green
