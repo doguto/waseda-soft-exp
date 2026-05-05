@@ -9,21 +9,21 @@
 
 ```java
 public class CreateRoomService {
-    public CreateRoomResponse call(CreateRoomRequest request) {
-        boolean success = roomRepository.create(request.roomId);
-        return new CreateRoomResponse(success);
+    public CreateRoomResultMessage call(CreateRoomMessage message) {
+        boolean success = roomRepository.create(message.roomId);
+        return new CreateRoomResultMessage(success);
     }
 }
 ```
 
 ```java
-public class CreateRoomRequest {
+public class CreateRoomMessage {
     public String roomId;
 }
 ```
 
 ```java
-public class CreateRoomResponse {
+public class CreateRoomResultMessage {
     public boolean success;
 }
 ```
@@ -65,7 +65,7 @@ flowchart TD
 ### 方針
 
 **クライアントリクエスト → 即時 Service 呼び出し**
-- `Service.call(request) → Response` をそのまま使う
+- `Service.call(message) → ResultMessage` をそのまま使う
 - Service 内で Repository を通じてデータを CRUD し、最後に `GameStateManager.check(event)` を呼ぶ
 
 **GameStateManager.check()**
@@ -113,8 +113,8 @@ sequenceDiagram
     participant W  as Worker
     participant DS as DistributeVoteResultService
 
-    C->>J: VoteRequest
-    J->>VS: call(request)
+    C->>J: VoteMessage
+    J->>VS: call(message)
     VS->>VR: save(playerId, targetId)
     VS->>GSM: check(VOTE_SUBMITTED)
     GSM->>VR: allVoted(roomId)?
