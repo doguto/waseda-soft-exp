@@ -90,7 +90,7 @@ sequenceDiagram
     SVC-->>J: CreateRoomResultMessage(success)
     J-->>C: Response
 
-    C->>J: JoinRoomMessage(roomId, playerId)
+    C->>J: JoinRoomMessage(roomId, name)
     J->>SVC: JoinRoomService.call()
     SVC-->>J: JoinRoomResultMessage(success)
     J-->>C: Response
@@ -141,7 +141,7 @@ sequenceDiagram
     Note over J,All: 初日は人狼の襲撃なし
     Other-->>J: 行動なし（待機）
 
-    Seer->>J: SeerInvestigateMessage(targetId)
+    Seer->>J: SeerInvestigateMessage(targetName)
     J->>SI: call()
     SI->>GSM: check(NIGHT_ACTION_SUBMITTED)
     Note over GSM: 占い師のみ完了 → 全役職完了と判定
@@ -172,19 +172,19 @@ sequenceDiagram
     participant All   as 全クライアント
 
     par 各役職が並行して行動
-        Wolf->>J: WolfAttackMessage(targetId)
+        Wolf->>J: WolfAttackMessage(targetName)
         J->>WA: call()
         WA->>GSM: check(NIGHT_ACTION_SUBMITTED)
         WA-->>J: WolfAttackResponse
         J-->>Wolf: Response
     and
-        Seer->>J: SeerInvestigateMessage(targetId)
+        Seer->>J: SeerInvestigateMessage(targetName)
         J->>SI: call()
         SI->>GSM: check(NIGHT_ACTION_SUBMITTED)
         SI-->>J: SeerInvestigateResponse
         J-->>Seer: Response
     and
-        Knight->>J: KnightGuardMessage(targetId)
+        Knight->>J: KnightGuardMessage(targetName)
         J->>KG: call()
         KG->>GSM: check(NIGHT_ACTION_SUBMITTED)
         KG-->>J: KnightGuardResponse
@@ -228,9 +228,9 @@ sequenceDiagram
     J-->>C: Response
 
     loop 各プレイヤーが投票
-        C->>J: VoteMessage(targetId)
+        C->>J: VoteMessage(targetName)
         J->>VS: call()
-        VS->>VR: save(playerId, targetId)
+        VS->>VR: save(playerName, targetName)
         VS->>GSM: check(VOTE_SUBMITTED)
         GSM->>VR: allVoted(roomId)?
         alt 全員投票完了 or タイマー切れ

@@ -27,8 +27,8 @@ public class JabberServer implements Broadcaster {
     }
 
     @Override
-    public void sendTo(String playerId, Object message) {
-        try { registry.sendTo(playerId, mapper.writeValueAsString(message)); }
+    public void sendTo(String playerName, Object message) {
+        try { registry.sendTo(playerName, mapper.writeValueAsString(message)); }
         catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -70,7 +70,7 @@ public class JabberServer implements Broadcaster {
     // ── client handler (one thread per connection) ───────────────────────────
 
     private void handleClient(Socket socket) {
-        String[] connectedPlayerId = {null};
+        String[] connectedPlayerName = {null};
         try (socket;
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true)) {
@@ -78,17 +78,17 @@ public class JabberServer implements Broadcaster {
             String line;
             while ((line = in.readLine()) != null) {
                 if (line.equals("END")) break;
-                String response = route(line, out, connectedPlayerId);
+                String response = route(line, out, connectedPlayerName);
                 if (response != null) out.println(response);
             }
         } catch (Exception e) {
             System.out.println("Client disconnected: " + e.getMessage());
         } finally {
-            if (connectedPlayerId[0] != null) registry.remove(connectedPlayerId[0]);
+            if (connectedPlayerName[0] != null) registry.remove(connectedPlayerName[0]);
         }
     }
 
-    private String route(String json, PrintWriter out, String[] connectedPlayerId) throws Exception {
+    private String route(String json, PrintWriter out, String[] connectedPlayerName) throws Exception {
         JsonNode node = mapper.readTree(json);
         String type = node.has("message_type") ? node.get("message_type").asText() : null;
         if (type == null) return null;
@@ -101,18 +101,18 @@ public class JabberServer implements Broadcaster {
             case CreateRoomMessage.MessageType -> {
                 CreateRoomMessage msg = mapper.readValue(json, CreateRoomMessage.class);
                 GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
-                registry.register(msg.playerId, out);
-                registry.joinRoom(msg.roomId, msg.playerId);
-                connectedPlayerId[0] = msg.playerId;
+                registry.register(msg.name, out);
+                registry.joinRoom(msg.roomId, msg.name);
+                connectedPlayerName[0] = msg.name;
                 CreateRoomResultMessage res = new CreateRoomService(msg.roomId, gm).call(msg);
                 yield mapper.writeValueAsString(res);
             }
             case JoinRoomMessage.MessageType -> {
                 JoinRoomMessage msg = mapper.readValue(json, JoinRoomMessage.class);
                 GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
-                registry.register(msg.playerId, out);
-                registry.joinRoom(msg.roomId, msg.playerId);
-                connectedPlayerId[0] = msg.playerId;
+                registry.register(msg.name, out);
+                registry.joinRoom(msg.roomId, msg.name);
+                connectedPlayerName[0] = msg.name;
                 yield mapper.writeValueAsString(new JoinRoomService(msg.roomId, gm).call(msg));
             }
             case DeleteRoomMessage.MessageType -> {
