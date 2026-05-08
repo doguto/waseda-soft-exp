@@ -1,20 +1,10 @@
 package src.server.service;
 
-import src.message.ExecuteMessage;
 import src.server.Broadcaster;
 import src.server.BroadcastService;
 import src.server.GameMaster;
-import src.server.GamePhase;
-import src.server.ServiceType;
-import src.server.database.entity.Player;
-import src.server.database.repository.PlayerRepository;
-import src.server.database.repository.VoteRepository;
-
-import java.util.Optional;
 
 public class ExecuteService extends BaseService implements BroadcastService {
-    private final VoteRepository voteRepo = new VoteRepository();
-    private final PlayerRepository playerRepo = new PlayerRepository();
     private final Broadcaster broadcaster;
 
     public ExecuteService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -24,24 +14,6 @@ public class ExecuteService extends BaseService implements BroadcastService {
 
     @Override
     public void call() {
-        Optional<String> targetName = voteRepo.resolveTarget(roomId);
-        if (targetName.isEmpty()) return;
-
-        String name = targetName.get();
-        playerRepo.findByName(roomId, name).ifPresent(p -> {
-            playerRepo.kill(roomId, name);
-            broadcaster.broadcast(roomId, new ExecuteMessage(p.name, p.role.name()));
-        });
-
-        voteRepo.reset(roomId);
-
-        if (playerRepo.villagersWin(roomId) || playerRepo.wolvesWin(roomId)) {
-            stateManager.setPhase(GamePhase.GAME_OVER);
-            gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
-        } else {
-            stateManager.setPhase(GamePhase.NIGHT);
-            stateManager.incrementNight();
-            gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
-        }
+        // 最多票プレイヤーを処刑してブロードキャスト、勝利判定後に次フェーズサービスをキューに積む
     }
 }

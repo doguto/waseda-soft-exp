@@ -2,20 +2,16 @@ package src.server.service;
 
 import src.message.VoteMessage;
 import src.message.VoteResultMessage;
-import src.server.GameEvent;
 import src.server.GameMaster;
-import src.server.database.repository.VoteRepository;
 
 public class VoteService extends BaseService {
-    private final VoteRepository voteRepo = new VoteRepository();
 
     public VoteService(String roomId, GameMaster gameMaster) {
         super(roomId, gameMaster);
     }
 
     public VoteResultMessage call(VoteMessage msg) {
-        voteRepo.save(msg.roomId, msg.playerName, msg.targetName);
-        stateManager.check(GameEvent.VOTE_SUBMITTED);
-        return new VoteResultMessage(true);
+        // 投票を保存し、全員投票済みなら次フェーズへ遷移する
+        return new VoteResultMessage();
     }
 }
