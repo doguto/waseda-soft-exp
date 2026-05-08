@@ -1,13 +1,19 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.DeleteRoomMessage;
+import src.message.DeleteRoomResultMessage;
+import src.server.GameMaster;
+import src.server.database.repository.RoomRepository;
 
-// ルームを削除するサービス
 public class DeleteRoomService extends BaseService {
-    public DeleteRoomService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final RoomRepository roomRepo = new RoomRepository();
+
+    public DeleteRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public DeleteRoomResultMessage call(DeleteRoomMessage msg) {
+        boolean deleted = roomRepo.delete(msg.roomId);
+        return new DeleteRoomResultMessage(deleted);
     }
 }

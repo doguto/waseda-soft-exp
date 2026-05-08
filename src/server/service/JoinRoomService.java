@@ -1,13 +1,26 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.JoinRoomMessage;
+import src.message.JoinRoomResultMessage;
+import src.server.GameMaster;
+import src.server.database.entity.Player;
+import src.server.database.repository.RoomRepository;
 
-// 既存のルームに参加するサービス
 public class JoinRoomService extends BaseService {
-    public JoinRoomService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final RoomRepository roomRepo = new RoomRepository();
+
+    public JoinRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public JoinRoomResultMessage call(JoinRoomMessage msg) {
+        if (!roomRepo.exists(msg.roomId)) {
+            return new JoinRoomResultMessage(false, "ルームが見つかりません");
+        }
+        boolean added = roomRepo.addPlayer(msg.roomId, new Player(msg.playerId, msg.name));
+        if (!added) {
+            return new JoinRoomResultMessage(false, "ルームへの参加に失敗しました");
+        }
+        return new JoinRoomResultMessage(true, "ルームに参加しました");
     }
 }

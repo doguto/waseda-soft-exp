@@ -1,13 +1,21 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.WolfAttackMessage;
+import src.message.WolfAttackResultMessage;
+import src.server.GameEvent;
+import src.server.GameMaster;
+import src.server.database.repository.NightActionRepository;
 
-// 夜フェーズに人狼が襲撃対象を選択するサービス
 public class WolfAttackService extends BaseService {
-    public WolfAttackService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final NightActionRepository nightActionRepo = new NightActionRepository();
+
+    public WolfAttackService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public WolfAttackResultMessage call(WolfAttackMessage msg) {
+        nightActionRepo.saveWolfAttack(msg.roomId, msg.wolfId, msg.targetId);
+        stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
+        return new WolfAttackResultMessage(true);
     }
 }
