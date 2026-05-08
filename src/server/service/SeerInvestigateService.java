@@ -1,13 +1,22 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.SeerInvestigateMessage;
+import src.message.SeerInvestigateResultMessage;
+import src.server.GameEvent;
+import src.server.GameMaster;
+import src.server.database.repository.NightActionRepository;
 
-// 夜フェーズに占い師が調査対象を選択し、翌朝に人狼か人間かを通知するサービス
 public class SeerInvestigateService extends BaseService {
-    public SeerInvestigateService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final NightActionRepository nightActionRepo = new NightActionRepository();
+
+    public SeerInvestigateService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public SeerInvestigateResultMessage call(SeerInvestigateMessage msg) {
+        nightActionRepo.saveSeerTarget(msg.roomId, msg.targetId);
+        stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
+        // 占い結果は AnnounceMorningService で翌朝に通知する
+        return new SeerInvestigateResultMessage(true);
     }
 }

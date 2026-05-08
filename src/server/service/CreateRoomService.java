@@ -1,13 +1,26 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.CreateRoomMessage;
+import src.message.CreateRoomResultMessage;
+import src.server.GameMaster;
+import src.server.GamePhase;
+import src.server.database.entity.Player;
+import src.server.database.repository.RoomRepository;
 
-// ルームを新規作成するサービス
 public class CreateRoomService extends BaseService {
-    public CreateRoomService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final RoomRepository roomRepo = new RoomRepository();
+
+    public CreateRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public CreateRoomResultMessage call(CreateRoomMessage msg) {
+        boolean created = roomRepo.create(msg.roomId);
+        if (!created) {
+            return new CreateRoomResultMessage(false, "ルームIDが既に存在します");
+        }
+        roomRepo.addPlayer(msg.roomId, new Player(msg.playerId, msg.name));
+        stateManager.setPhase(GamePhase.WAITING);
+        return new CreateRoomResultMessage(true, "ルームを作成しました");
     }
 }

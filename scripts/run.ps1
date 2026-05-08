@@ -3,7 +3,7 @@
 
 param (
     [Parameter(Mandatory=$true)]
-    [ValidateSet("server", "client")]
+    [ValidateSet("server", "client", "debug")]
     [string]$Target
 )
 
@@ -20,6 +20,9 @@ $cp = "$outDir;$libDir/*"
 if ($Target -eq "server") {
     Write-Host "Starting JabberServer..." -ForegroundColor Cyan
     java -cp $cp src.server.JabberServer
+} elseif ($Target -eq "debug") {
+    Write-Host "Starting DebugClient..." -ForegroundColor Yellow
+    java -cp $cp src.client.DebugClient
 } else {
     Write-Host "Starting JabberClient..." -ForegroundColor Cyan
     java -cp $cp src.client.JabberClient

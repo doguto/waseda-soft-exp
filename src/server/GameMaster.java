@@ -1,0 +1,62 @@
+package src.server;
+
+import src.server.database.entity.Player;
+import src.server.database.entity.Role;
+import src.server.database.repository.NightActionRepository;
+import src.server.database.repository.PlayerRepository;
+import src.server.database.repository.VoteRepository;
+
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class GameMaster {
+    private final String roomId;
+    private final BlockingQueue<ServiceType> queue = new LinkedBlockingQueue<>();
+    private final GameStateManager stateManager;
+
+    private final NightActionRepository nightActionRepo = new NightActionRepository();
+    private final PlayerRepository playerRepo = new PlayerRepository();
+    private final VoteRepository voteRepo = new VoteRepository();
+
+    public GameMaster(String roomId) {
+        this.roomId = roomId;
+        this.stateManager = new GameStateManager(this);
+    }
+
+    public void pushService(ServiceType type) {
+        queue.offer(type);
+    }
+
+    public void startWorker(Broadcaster broadcaster) {
+        Thread workerThread = new Thread(new Worker(queue, this, broadcaster));
+        workerThread.setDaemon(true);
+        workerThread.start();
+    }
+
+    // ── condition checks (called by GameStateManager.check) ─────────────────
+
+    public boolean allNightActionsComplete() {
+        if (stateManager.isFirstNight()) {
+            return nightActionRepo.getSeerTarget(roomId).isPresent();
+        }
+        List<Player> alive = playerRepo.getAlivePlayers(roomId);
+        boolean hasWolf   = alive.stream().anyMatch(p -> p.role == Role.WOLF);
+        boolean hasSeer   = alive.stream().anyMatch(p -> p.role == Role.SEER);
+        boolean hasKnight = alive.stream().anyMatch(p -> p.role == Role.KNIGHT);
+
+        if (hasWolf   && !nightActionRepo.allWolvesAttacked(roomId))      return false;
+        if (hasSeer   && nightActionRepo.getSeerTarget(roomId).isEmpty())  return false;
+        if (hasKnight && nightActionRepo.getKnightTarget(roomId).isEmpty())return false;
+        return true;
+    }
+
+    public boolean allVoted() {
+        return voteRepo.allVoted(roomId);
+    }
+
+    // ── getters ──────────────────────────────────────────────────────────────
+
+    public String getRoomId()               { return roomId; }
+    public GameStateManager getStateManager(){ return stateManager; }
+}

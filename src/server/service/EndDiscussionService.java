@@ -1,13 +1,17 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.EndDiscussionMessage;
+import src.message.EndDiscussionResultMessage;
+import src.server.GameEvent;
+import src.server.GameMaster;
 
-// 議論終了ボタン押下またはタイマー切れで昼の議論を終了し、投票フェーズへ遷移するサービス
 public class EndDiscussionService extends BaseService {
-    public EndDiscussionService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    public EndDiscussionService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public EndDiscussionResultMessage call(EndDiscussionMessage msg) {
+        stateManager.check(GameEvent.DISCUSSION_ENDED);
+        return new EndDiscussionResultMessage(true);
     }
 }
