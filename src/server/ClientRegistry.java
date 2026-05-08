@@ -1,13 +1,11 @@
 package src.server;
 
-import src.server.database.entity.Player;
-import src.server.database.entity.Role;
-import src.server.database.repository.PlayerRepository;
-
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import src.server.database.entity.Role;
+import src.server.database.repository.PlayerRepository;
 
 public class ClientRegistry {
     private final Map<String, PrintWriter> clients     = new ConcurrentHashMap<>();
