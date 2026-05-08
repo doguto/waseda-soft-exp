@@ -17,10 +17,10 @@ public class CreateRoomService extends BaseService {
     public CreateRoomResultMessage call(CreateRoomMessage msg) {
         boolean created = roomRepo.create(msg.roomId);
         if (!created) {
-            return new CreateRoomResultMessage(false, "ルームID が既に存在するわ");
+            return new CreateRoomResultMessage(false, "ルームIDが既に存在します");
         }
         roomRepo.addPlayer(msg.roomId, new Player(msg.playerId, msg.name));
         stateManager.setPhase(GamePhase.WAITING);
-        return new CreateRoomResultMessage(true, "ルームを作成したわ");
+        return new CreateRoomResultMessage(true, "ルームを作成しました");
     }
 }

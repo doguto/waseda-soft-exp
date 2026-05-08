@@ -124,7 +124,7 @@ public class JabberServer implements Broadcaster {
             case StartGameMessage.MessageType -> {
                 StartGameMessage msg = mapper.readValue(json, StartGameMessage.class);
                 GameMaster gm = gameMasters.get(msg.roomId);
-                if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しないわ"));
+                if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しません"));
                 yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, this).call(msg));
             }
             case WolfAttackMessage.MessageType -> {

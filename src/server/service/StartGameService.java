@@ -19,12 +19,12 @@ public class StartGameService extends BaseService {
 
     public StartGameResultMessage call(StartGameMessage msg) {
         if (!roomRepo.canStart(msg.roomId)) {
-            return new StartGameResultMessage(false, "4人以上必要よ");
+            return new StartGameResultMessage(false, "ゲーム開始には4人以上必要です");
         }
         stateManager.setPhase(GamePhase.NIGHT);
         stateManager.incrementNight();
         gameMaster.startWorker(broadcaster);
         gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE);
-        return new StartGameResultMessage(true, "ゲームを開始するわ");
+        return new StartGameResultMessage(true, "ゲームを開始します");
     }
 }
