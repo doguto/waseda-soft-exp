@@ -15,7 +15,6 @@ import java.util.Scanner;
 public class DebugClient {
 
     private static String roomId = "room1";
-    private static String playerId = "player1";
     private static String playerName = "デバッグ太郎";
     private static PrintWriter out;
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -23,12 +22,8 @@ public class DebugClient {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("playerId [player1]: ");
-        String input = scanner.nextLine().trim();
-        if (!input.isEmpty()) playerId = input;
-
         System.out.print("playerName [デバッグ太郎]: ");
-        input = scanner.nextLine().trim();
+        String input = scanner.nextLine().trim();
         if (!input.isEmpty()) playerName = input;
 
         System.out.print("roomId [room1]: ");
@@ -60,7 +55,7 @@ public class DebugClient {
         receiver.setDaemon(true);
         receiver.start();
 
-        System.out.println("接続完了: playerId=" + playerId + " roomId=" + roomId);
+        System.out.println("接続完了: playerName=" + playerName + " roomId=" + roomId);
         printMenu();
 
         while (true) {
@@ -71,7 +66,7 @@ public class DebugClient {
                 case "2" -> send(joinRoom());
                 case "3" -> send(startGame());
                 case "4" -> {
-                    System.out.print("  targetId: ");
+                    System.out.print("  targetName: ");
                     String target = scanner.nextLine().trim();
                     send(vote(target));
                 }
@@ -86,17 +81,17 @@ public class DebugClient {
                     send(wolfChat(text));
                 }
                 case "7" -> {
-                    System.out.print("  targetId(狼が襲う): ");
+                    System.out.print("  targetName(狼が襲う): ");
                     String target = scanner.nextLine().trim();
                     send(wolfAttack(target));
                 }
                 case "8" -> {
-                    System.out.print("  targetId(占い対象): ");
+                    System.out.print("  targetName(占い対象): ");
                     String target = scanner.nextLine().trim();
                     send(seerInvestigate(target));
                 }
                 case "9" -> {
-                    System.out.print("  targetId(守る対象): ");
+                    System.out.print("  targetName(守る対象): ");
                     String target = scanner.nextLine().trim();
                     send(knightGuard(target));
                 }
@@ -132,7 +127,7 @@ public class DebugClient {
         System.out.println("""
             ── メニュー ─────────────────────────────
              1) create_room     2) join_room
-             3) start_game      4) vote (targetId)
+             3) start_game      4) vote (targetName)
              5) village_chat    6) wolf_chat
              7) wolf_attack     8) seer_investigate
              9) knight_guard   10) end_discussion
@@ -145,61 +140,61 @@ public class DebugClient {
 
     private static CreateRoomMessage createRoom() {
         var m = new CreateRoomMessage();
-        m.roomId = roomId; m.playerId = playerId; m.name = playerName;
+        m.roomId = roomId; m.name = playerName;
         return m;
     }
 
     private static JoinRoomMessage joinRoom() {
         var m = new JoinRoomMessage();
-        m.roomId = roomId; m.playerId = playerId; m.name = playerName;
+        m.roomId = roomId; m.name = playerName;
         return m;
     }
 
     private static StartGameMessage startGame() {
         var m = new StartGameMessage();
-        m.roomId = roomId; m.playerId = playerId;
+        m.roomId = roomId;
         return m;
     }
 
-    private static VoteMessage vote(String targetId) {
+    private static VoteMessage vote(String targetName) {
         var m = new VoteMessage();
-        m.roomId = roomId; m.playerId = playerId; m.targetId = targetId;
+        m.roomId = roomId; m.playerName = playerName; m.targetName = targetName;
         return m;
     }
 
     private static SendVillageChatMessage villageChat(String text) {
         var m = new SendVillageChatMessage();
-        m.roomId = roomId; m.senderId = playerId; m.text = text;
+        m.roomId = roomId; m.senderName = playerName; m.text = text;
         return m;
     }
 
     private static SendWolfChatMessage wolfChat(String text) {
         var m = new SendWolfChatMessage();
-        m.roomId = roomId; m.senderId = playerId; m.text = text;
+        m.roomId = roomId; m.senderName = playerName; m.text = text;
         return m;
     }
 
-    private static WolfAttackMessage wolfAttack(String targetId) {
+    private static WolfAttackMessage wolfAttack(String targetName) {
         var m = new WolfAttackMessage();
-        m.roomId = roomId; m.wolfId = playerId; m.targetId = targetId;
+        m.roomId = roomId; m.wolfName = playerName; m.targetName = targetName;
         return m;
     }
 
-    private static SeerInvestigateMessage seerInvestigate(String targetId) {
+    private static SeerInvestigateMessage seerInvestigate(String targetName) {
         var m = new SeerInvestigateMessage();
-        m.roomId = roomId; m.seerId = playerId; m.targetId = targetId;
+        m.roomId = roomId; m.seerName = playerName; m.targetName = targetName;
         return m;
     }
 
-    private static KnightGuardMessage knightGuard(String targetId) {
+    private static KnightGuardMessage knightGuard(String targetName) {
         var m = new KnightGuardMessage();
-        m.roomId = roomId; m.knightId = playerId; m.targetId = targetId;
+        m.roomId = roomId; m.knightName = playerName; m.targetName = targetName;
         return m;
     }
 
     private static EndDiscussionMessage endDiscussion() {
         var m = new EndDiscussionMessage();
-        m.roomId = roomId; m.playerId = playerId;
+        m.roomId = roomId;
         return m;
     }
 }

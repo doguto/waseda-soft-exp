@@ -11,18 +11,18 @@ import java.util.Optional;
 public class PlayerRepository {
     private final GameDatabase db = GameDatabase.getInstance();
 
-    public Optional<Player> findById(String roomId, String playerId) {
+    public Optional<Player> findByName(String roomId, String name) {
         RoomData room = db.getRoom(roomId);
         if (room == null) return Optional.empty();
-        return room.players.stream().filter(p -> p.id.equals(playerId)).findFirst();
+        return room.players.stream().filter(p -> p.name.equals(name)).findFirst();
     }
 
-    public boolean setRole(String roomId, String playerId, Role role) {
-        return findById(roomId, playerId).map(p -> { p.role = role; return true; }).orElse(false);
+    public boolean setRole(String roomId, String name, Role role) {
+        return findByName(roomId, name).map(p -> { p.role = role; return true; }).orElse(false);
     }
 
-    public boolean kill(String roomId, String playerId) {
-        return findById(roomId, playerId).map(p -> { p.alive = false; return true; }).orElse(false);
+    public boolean kill(String roomId, String name) {
+        return findByName(roomId, name).map(p -> { p.alive = false; return true; }).orElse(false);
     }
 
     public List<Player> getAlivePlayers(String roomId) {

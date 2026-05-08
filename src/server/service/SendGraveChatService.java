@@ -7,11 +7,9 @@ import src.server.Broadcaster;
 import src.server.GameMaster;
 import src.server.database.entity.ChatMessage;
 import src.server.database.repository.ChatRepository;
-import src.server.database.repository.PlayerRepository;
 
 public class SendGraveChatService extends BaseService {
     private final ChatRepository chatRepo = new ChatRepository();
-    private final PlayerRepository playerRepo = new PlayerRepository();
     private final Broadcaster broadcaster;
 
     public SendGraveChatService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -20,11 +18,9 @@ public class SendGraveChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendGraveChatMessage msg) {
-        String senderName = playerRepo.findById(msg.roomId, msg.senderId)
-            .map(p -> p.name).orElse("?");
-        chatRepo.addGraveMessage(msg.roomId, new ChatMessage(msg.senderId, senderName, msg.text));
+        chatRepo.addGraveMessage(msg.roomId, new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcastDead(msg.roomId,
-            new ChatBroadcastMessage("GRAVE", msg.senderId, senderName, msg.text));
+            new ChatBroadcastMessage("GRAVE", msg.senderName, msg.text));
         return new SendChatResultMessage(true);
     }
 }

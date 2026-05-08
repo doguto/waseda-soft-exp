@@ -2,21 +2,16 @@ package src.server.service;
 
 import src.message.SeerInvestigateMessage;
 import src.message.SeerInvestigateResultMessage;
-import src.server.GameEvent;
 import src.server.GameMaster;
-import src.server.database.repository.NightActionRepository;
 
 public class SeerInvestigateService extends BaseService {
-    private final NightActionRepository nightActionRepo = new NightActionRepository();
 
     public SeerInvestigateService(String roomId, GameMaster gameMaster) {
         super(roomId, gameMaster);
     }
 
     public SeerInvestigateResultMessage call(SeerInvestigateMessage msg) {
-        nightActionRepo.saveSeerTarget(msg.roomId, msg.targetId);
-        stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
-        // 占い結果は AnnounceMorningService で翌朝に通知する
-        return new SeerInvestigateResultMessage(true);
+        // 占い先を保存し、全夜アクション完了なら次フェーズへ遷移する（結果は翌朝通知）
+        return new SeerInvestigateResultMessage();
     }
 }
