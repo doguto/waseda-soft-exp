@@ -17,7 +17,12 @@ public class JoinRoomService extends BaseService {
         if (!roomRepo.exists(msg.roomId)) {
             return new JoinRoomResultMessage(false, "ルームが見つかりません");
         }
-        boolean added = roomRepo.addPlayer(msg.roomId, new Player(msg.playerId, msg.name));
+        boolean nameExists = roomRepo.getPlayers(msg.roomId).stream()
+            .anyMatch(p -> p.name.equals(msg.name));
+        if (nameExists) {
+            return new JoinRoomResultMessage(false, "同じ名前のプレイヤーが既に存在します");
+        }
+        boolean added = roomRepo.addPlayer(msg.roomId, new Player(msg.name));
         if (!added) {
             return new JoinRoomResultMessage(false, "ルームへの参加に失敗しました");
         }

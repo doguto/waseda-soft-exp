@@ -10,11 +10,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RoomData {
     public final List<Player>        players      = new CopyOnWriteArrayList<>();
-    public final Map<String, String> votes        = new ConcurrentHashMap<>(); // playerId -> targetId
-    public final Map<String, String> wolfAttacks  = new ConcurrentHashMap<>(); // wolfId -> targetId
+    public final Map<String, String> votes        = new ConcurrentHashMap<>(); // playerName -> targetName
+    public final Map<String, String> wolfAttacks  = new ConcurrentHashMap<>(); // wolfName -> targetName
     public volatile String           knightTarget = null;
     public volatile String           seerTarget   = null;
-    public volatile String           executedPlayerId = null; // 霊媒師通知用
+    public volatile String           executedPlayerName = null;
 
     public final List<ChatMessage> villageChat = new CopyOnWriteArrayList<>();
     public final List<ChatMessage> wolfChat    = new CopyOnWriteArrayList<>();

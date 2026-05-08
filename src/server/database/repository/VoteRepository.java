@@ -14,9 +14,9 @@ public class VoteRepository {
     private final GameDatabase db = GameDatabase.getInstance();
     private final PlayerRepository playerRepository = new PlayerRepository();
 
-    public void save(String roomId, String playerId, String targetId) {
+    public void save(String roomId, String playerName, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.votes.put(playerId, targetId);
+        if (room != null) room.votes.put(playerName, targetName);
     }
 
     public boolean allVoted(String roomId) {

@@ -1,16 +1,13 @@
 package src.server.service;
 
-import src.message.AnnounceGameOverMessage;
-import src.server.Broadcaster;
-import src.server.BroadcastService;
-import src.server.GameMaster;
-import src.server.database.entity.Player;
-import src.server.database.entity.Role;
-import src.server.database.repository.PlayerRepository;
-import src.server.database.repository.RoomRepository;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import src.message.AnnounceGameOverMessage;
+import src.server.BroadcastService;
+import src.server.Broadcaster;
+import src.server.GameMaster;
+import src.server.database.repository.PlayerRepository;
+import src.server.database.repository.RoomRepository;
 
 public class AnnounceGameOverService extends BaseService implements BroadcastService {
     private final PlayerRepository playerRepo = new PlayerRepository();
@@ -27,7 +24,7 @@ public class AnnounceGameOverService extends BaseService implements BroadcastSer
         String winner = playerRepo.villagersWin(roomId) ? "VILLAGER" : "WOLF";
 
         List<AnnounceGameOverMessage.PlayerResult> results = roomRepo.getPlayers(roomId).stream()
-            .map(p -> new AnnounceGameOverMessage.PlayerResult(p.id, p.name, p.role.name()))
+            .map(p -> new AnnounceGameOverMessage.PlayerResult(p.name, p.role.name()))
             .collect(Collectors.toList());
 
         broadcaster.broadcast(roomId, new AnnounceGameOverMessage(winner, results));

@@ -14,7 +14,7 @@ public class KnightGuardService extends BaseService {
     }
 
     public KnightGuardResultMessage call(KnightGuardMessage msg) {
-        nightActionRepo.saveKnightTarget(msg.roomId, msg.targetId);
+        nightActionRepo.saveKnightTarget(msg.roomId, msg.targetName);
         stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
         return new KnightGuardResultMessage(true);
     }

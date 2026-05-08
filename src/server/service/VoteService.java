@@ -14,7 +14,7 @@ public class VoteService extends BaseService {
     }
 
     public VoteResultMessage call(VoteMessage msg) {
-        voteRepo.save(msg.roomId, msg.playerId, msg.targetId);
+        voteRepo.save(msg.roomId, msg.playerName, msg.targetName);
         stateManager.check(GameEvent.VOTE_SUBMITTED);
         return new VoteResultMessage(true);
     }

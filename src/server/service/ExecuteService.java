@@ -24,13 +24,13 @@ public class ExecuteService extends BaseService implements BroadcastService {
 
     @Override
     public void call() {
-        Optional<String> targetId = voteRepo.resolveTarget(roomId);
-        if (targetId.isEmpty()) return;
+        Optional<String> targetName = voteRepo.resolveTarget(roomId);
+        if (targetName.isEmpty()) return;
 
-        String id = targetId.get();
-        playerRepo.findById(roomId, id).ifPresent(p -> {
-            playerRepo.kill(roomId, id);
-            broadcaster.broadcast(roomId, new ExecuteMessage(id, p.name, p.role.name()));
+        String name = targetName.get();
+        playerRepo.findByName(roomId, name).ifPresent(p -> {
+            playerRepo.kill(roomId, name);
+            broadcaster.broadcast(roomId, new ExecuteMessage(p.name, p.role.name()));
         });
 
         voteRepo.reset(roomId);

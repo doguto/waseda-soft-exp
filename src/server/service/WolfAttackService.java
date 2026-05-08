@@ -14,7 +14,7 @@ public class WolfAttackService extends BaseService {
     }
 
     public WolfAttackResultMessage call(WolfAttackMessage msg) {
-        nightActionRepo.saveWolfAttack(msg.roomId, msg.wolfId, msg.targetId);
+        nightActionRepo.saveWolfAttack(msg.roomId, msg.wolfName, msg.targetName);
         stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
         return new WolfAttackResultMessage(true);
     }

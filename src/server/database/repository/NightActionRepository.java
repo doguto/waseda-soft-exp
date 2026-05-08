@@ -16,9 +16,9 @@ public class NightActionRepository {
     private final PlayerRepository playerRepository = new PlayerRepository();
 
     // 人狼の投票
-    public void saveWolfAttack(String roomId, String wolfId, String targetId) {
+    public void saveWolfAttack(String roomId, String wolfName, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.wolfAttacks.put(wolfId, targetId);
+        if (room != null) room.wolfAttacks.put(wolfName, targetName);
     }
 
     public boolean allWolvesAttacked(String roomId) {
@@ -47,9 +47,9 @@ public class NightActionRepository {
     }
 
     // 占い師
-    public void saveSeerTarget(String roomId, String targetId) {
+    public void saveSeerTarget(String roomId, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.seerTarget = targetId;
+        if (room != null) room.seerTarget = targetName;
     }
 
     public Optional<String> getSeerTarget(String roomId) {
@@ -58,9 +58,9 @@ public class NightActionRepository {
     }
 
     // 騎士
-    public void saveKnightTarget(String roomId, String targetId) {
+    public void saveKnightTarget(String roomId, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.knightTarget = targetId;
+        if (room != null) room.knightTarget = targetName;
     }
 
     public Optional<String> getKnightTarget(String roomId) {

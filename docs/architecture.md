@@ -115,7 +115,7 @@ sequenceDiagram
 
     C->>J: VoteMessage
     J->>VS: call(message)
-    VS->>VR: save(playerId, targetId)
+    VS->>VR: save(playerName, targetName)
     VS->>GSM: check(VOTE_SUBMITTED)
     GSM->>VR: allVoted(roomId)?
     VR-->>GSM: true
@@ -165,7 +165,7 @@ classDiagram
 
     class JabberServer {
         +broadcast(GameEvent event) void
-        +sendTo(String playerId, GameEvent event) void
+        +sendTo(String playerName, GameEvent event) void
     }
 
     class VoteService {
@@ -175,7 +175,7 @@ classDiagram
     }
 
     class VoteRepository {
-        +save(String roomId, String playerId, String targetId) void
+        +save(String roomId, String playerName, String targetName) void
         +allVoted(String roomId) boolean
     }
 

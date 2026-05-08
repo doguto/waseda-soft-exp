@@ -15,13 +15,11 @@ public class AnnounceGameOverMessage {
     }
 
     public static class PlayerResult {
-        public String id;
         public String name;
         public String role;
 
         public PlayerResult() {}
-        public PlayerResult(String id, String name, String role) {
-            this.id = id;
+        public PlayerResult(String name, String role) {
             this.name = name;
             this.role = role;
         }

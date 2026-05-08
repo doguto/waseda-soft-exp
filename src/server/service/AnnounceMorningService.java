@@ -30,15 +30,14 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         AnnounceMorningMessage msg = new AnnounceMorningMessage();
 
         if (!stateManager.isFirstNight()) {
-            Optional<String> attackedId = nightActionRepo.resolveAttack(roomId);
-            Optional<String> guardedId  = nightActionRepo.getKnightTarget(roomId);
+            Optional<String> attackedName = nightActionRepo.resolveAttack(roomId);
+            Optional<String> guardedName  = nightActionRepo.getKnightTarget(roomId);
 
-            if (attackedId.isPresent()) {
-                boolean guarded = guardedId.map(g -> g.equals(attackedId.get())).orElse(false);
+            if (attackedName.isPresent()) {
+                boolean guarded = guardedName.map(g -> g.equals(attackedName.get())).orElse(false);
                 if (!guarded) {
-                    playerRepo.kill(roomId, attackedId.get());
-                    playerRepo.findById(roomId, attackedId.get()).ifPresent(p -> {
-                        msg.deadPlayerId   = p.id;
+                    playerRepo.kill(roomId, attackedName.get());
+                    playerRepo.findByName(roomId, attackedName.get()).ifPresent(p -> {
                         msg.deadPlayerName = p.name;
                     });
                 }
@@ -49,14 +48,14 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         nightActionRepo.reset(roomId);
 
         // 占い師のみに調査結果を送信（翌朝通知）
-        nightActionRepo.getSeerTarget(roomId).ifPresent(targetId ->
-            playerRepo.findById(roomId, targetId).ifPresent(target -> {
+        nightActionRepo.getSeerTarget(roomId).ifPresent(targetName ->
+            playerRepo.findByName(roomId, targetName).ifPresent(target -> {
                 boolean isWolf = target.role == Role.WOLF;
                 playerRepo.getAlivePlayers(roomId).stream()
                     .filter(p -> p.role == Role.SEER)
                     .findFirst()
                     .ifPresent(seer ->
-                        broadcaster.sendTo(seer.id, new SeerResultMessage(target.id, target.name, isWolf))
+                        broadcaster.sendTo(seer.name, new SeerResultMessage(target.name, isWolf))
                     );
             })
         );

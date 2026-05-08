@@ -14,7 +14,7 @@ public class SeerInvestigateService extends BaseService {
     }
 
     public SeerInvestigateResultMessage call(SeerInvestigateMessage msg) {
-        nightActionRepo.saveSeerTarget(msg.roomId, msg.targetId);
+        nightActionRepo.saveSeerTarget(msg.roomId, msg.targetName);
         stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED);
         // 占い結果は AnnounceMorningService で翌朝に通知する
         return new SeerInvestigateResultMessage(true);
