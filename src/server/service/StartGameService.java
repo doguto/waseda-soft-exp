@@ -1,13 +1,30 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.StartGameMessage;
+import src.message.StartGameResultMessage;
+import src.server.Broadcaster;
+import src.server.GameMaster;
+import src.server.GamePhase;
+import src.server.ServiceType;
+import src.server.database.repository.RoomRepository;
 
-// ゲーム開始ボタン押下時にゲームを開始するサービス
 public class StartGameService extends BaseService {
-    public StartGameService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final RoomRepository roomRepo = new RoomRepository();
+    private final Broadcaster broadcaster;
+
+    public StartGameService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
+        super(roomId, gameMaster);
+        this.broadcaster = broadcaster;
     }
 
-    public void call() {
+    public StartGameResultMessage call(StartGameMessage msg) {
+        if (!roomRepo.canStart(msg.roomId)) {
+            return new StartGameResultMessage(false, "4人以上必要よ");
+        }
+        stateManager.setPhase(GamePhase.NIGHT);
+        stateManager.incrementNight();
+        gameMaster.startWorker(broadcaster);
+        gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE);
+        return new StartGameResultMessage(true, "ゲームを開始するわ");
     }
 }

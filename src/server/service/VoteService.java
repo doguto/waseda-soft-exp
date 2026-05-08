@@ -1,13 +1,21 @@
 package src.server.service;
 
-import src.server.GameStateManager;
+import src.message.VoteMessage;
+import src.message.VoteResultMessage;
+import src.server.GameEvent;
+import src.server.GameMaster;
+import src.server.database.repository.VoteRepository;
 
-// 昼フェーズにプレイヤーが投票対象を選択して票を登録するサービス
 public class VoteService extends BaseService {
-    public VoteService(String roomId, GameStateManager stateManager) {
-        super(roomId, stateManager);
+    private final VoteRepository voteRepo = new VoteRepository();
+
+    public VoteService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
-    public void call() {
+    public VoteResultMessage call(VoteMessage msg) {
+        voteRepo.save(msg.roomId, msg.playerId, msg.targetId);
+        stateManager.check(GameEvent.VOTE_SUBMITTED);
+        return new VoteResultMessage(true);
     }
 }

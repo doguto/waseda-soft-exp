@@ -1,63 +1,176 @@
 package src.server;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import src.message.*;
+import src.server.database.entity.Role;
+import src.server.service.*;
+
 import java.io.*;
 import java.net.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import src.message.HelloRequestMessage;
-import src.message.HelloResponseMessage;
-import src.server.service.HelloService;
+import java.util.Map;
+import java.util.concurrent.*;
 
-public class JabberServer { 
-    public static final int PORT = 8080; // ポート番号を設定する． 
-    public static void main(String[] args) 
-    throws IOException { 
-        ServerSocket s = new ServerSocket(PORT); // ソケットを作成する 
-        System.out.println("Started: " + s); 
-        ObjectMapper mapper = new ObjectMapper();
-        try { 
-            Socket socket = s.accept(); // コネクション設定要求を待つ 
-            try { 
-                System.out.println("Connection accepted: " + socket); 
-                BufferedReader in = new BufferedReader( 
-                    new InputStreamReader(socket.getInputStream())
-                ); // データ受信用バッファの設定 
-                PrintWriter out = new PrintWriter( 
-                    new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())),
-                    true
-                ); // 送信バッファ設定 
-                HelloService helloService = new HelloService();
-                while (true) {
-                    String str = in.readLine(); // データの受信
-                    if(str == null || str.equals("END")) break;
+public class JabberServer implements Broadcaster {
+    public static final int PORT = 8080;
 
-                    JsonNode node = mapper.readTree(str);
-                    String messageType = node.has("message_type") ? node.get("message_type").asText() : null;
-                    
-                    if (messageType == null) {
-                        System.out.println("Unknown message format: " + str);
-                        continue;
-                    }
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final ClientRegistry registry = new ClientRegistry();
+    private final Map<String, GameMaster> gameMasters = new ConcurrentHashMap<>();
 
-                    switch (messageType) {
-                        case HelloRequestMessage.MessageType:
-                            HelloRequestMessage requestMsg = mapper.readValue(str, HelloRequestMessage.class);
-                            HelloResponseMessage responseMsg = helloService.call(requestMsg);
-                            
-                            String jsonResponse = mapper.writeValueAsString(responseMsg);
-                            System.out.println("Responding: " + jsonResponse);
-                            out.println(jsonResponse);  // データの送信
-                            break;
-                        default:
-                            System.out.println("Unsupported message type: " + messageType);
-                            break;
-                    }
-                }
-            } finally { 
-                System.out.println("closing..."); 
-                socket.close(); 
-            } 
-        } finally { 
-            s.close(); 
-        } 
-    } 
+    // ── Broadcaster implementation ───────────────────────────────────────────
+
+    @Override
+    public void broadcast(String roomId, Object message) {
+        try { registry.broadcastToRoom(roomId, mapper.writeValueAsString(message)); }
+        catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void sendTo(String playerId, Object message) {
+        try { registry.sendTo(playerId, mapper.writeValueAsString(message)); }
+        catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void broadcastAlive(String roomId, Object message) {
+        try { registry.broadcastAlive(roomId, mapper.writeValueAsString(message)); }
+        catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void broadcastToRole(String roomId, Role role, Object message) {
+        try { registry.broadcastToRole(roomId, role, mapper.writeValueAsString(message)); }
+        catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void broadcastDead(String roomId, Object message) {
+        try { registry.broadcastDead(roomId, mapper.writeValueAsString(message)); }
+        catch (Exception e) { e.printStackTrace(); }
+    }
+
+    // ── server entry point ───────────────────────────────────────────────────
+
+    public void start() throws IOException {
+        ExecutorService pool = Executors.newCachedThreadPool();
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Started: " + serverSocket);
+            while (true) {
+                Socket socket = serverSocket.accept();
+                pool.submit(() -> handleClient(socket));
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        new JabberServer().start();
+    }
+
+    // ── client handler (one thread per connection) ───────────────────────────
+
+    private void handleClient(Socket socket) {
+        String[] connectedPlayerId = {null};
+        try (socket;
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true)) {
+
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.equals("END")) break;
+                String response = route(line, out, connectedPlayerId);
+                if (response != null) out.println(response);
+            }
+        } catch (Exception e) {
+            System.out.println("Client disconnected: " + e.getMessage());
+        } finally {
+            if (connectedPlayerId[0] != null) registry.remove(connectedPlayerId[0]);
+        }
+    }
+
+    private String route(String json, PrintWriter out, String[] connectedPlayerId) throws Exception {
+        JsonNode node = mapper.readTree(json);
+        String type = node.has("message_type") ? node.get("message_type").asText() : null;
+        if (type == null) return null;
+
+        return switch (type) {
+            case HelloRequestMessage.MessageType -> {
+                HelloRequestMessage req = mapper.readValue(json, HelloRequestMessage.class);
+                yield mapper.writeValueAsString(new HelloService().call(req));
+            }
+            case CreateRoomMessage.MessageType -> {
+                CreateRoomMessage msg = mapper.readValue(json, CreateRoomMessage.class);
+                GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
+                registry.register(msg.playerId, out);
+                registry.joinRoom(msg.roomId, msg.playerId);
+                connectedPlayerId[0] = msg.playerId;
+                CreateRoomResultMessage res = new CreateRoomService(msg.roomId, gm).call(msg);
+                yield mapper.writeValueAsString(res);
+            }
+            case JoinRoomMessage.MessageType -> {
+                JoinRoomMessage msg = mapper.readValue(json, JoinRoomMessage.class);
+                GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
+                registry.register(msg.playerId, out);
+                registry.joinRoom(msg.roomId, msg.playerId);
+                connectedPlayerId[0] = msg.playerId;
+                yield mapper.writeValueAsString(new JoinRoomService(msg.roomId, gm).call(msg));
+            }
+            case DeleteRoomMessage.MessageType -> {
+                DeleteRoomMessage msg = mapper.readValue(json, DeleteRoomMessage.class);
+                GameMaster gm = gameMasters.remove(msg.roomId);
+                if (gm == null) yield mapper.writeValueAsString(new DeleteRoomResultMessage(false));
+                yield mapper.writeValueAsString(new DeleteRoomService(msg.roomId, gm).call(msg));
+            }
+            case StartGameMessage.MessageType -> {
+                StartGameMessage msg = mapper.readValue(json, StartGameMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しないわ"));
+                yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, this).call(msg));
+            }
+            case WolfAttackMessage.MessageType -> {
+                WolfAttackMessage msg = mapper.readValue(json, WolfAttackMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new WolfAttackService(msg.roomId, gm).call(msg));
+            }
+            case SeerInvestigateMessage.MessageType -> {
+                SeerInvestigateMessage msg = mapper.readValue(json, SeerInvestigateMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new SeerInvestigateService(msg.roomId, gm).call(msg));
+            }
+            case KnightGuardMessage.MessageType -> {
+                KnightGuardMessage msg = mapper.readValue(json, KnightGuardMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new KnightGuardService(msg.roomId, gm).call(msg));
+            }
+            case EndDiscussionMessage.MessageType -> {
+                EndDiscussionMessage msg = mapper.readValue(json, EndDiscussionMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm).call(msg));
+            }
+            case VoteMessage.MessageType -> {
+                VoteMessage msg = mapper.readValue(json, VoteMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new VoteService(msg.roomId, gm).call(msg));
+            }
+            case SendVillageChatMessage.MessageType -> {
+                SendVillageChatMessage msg = mapper.readValue(json, SendVillageChatMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new SendVillageChatService(msg.roomId, gm, this).call(msg));
+            }
+            case SendWolfChatMessage.MessageType -> {
+                SendWolfChatMessage msg = mapper.readValue(json, SendWolfChatMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new SendWolfChatService(msg.roomId, gm, this).call(msg));
+            }
+            case SendGraveChatMessage.MessageType -> {
+                SendGraveChatMessage msg = mapper.readValue(json, SendGraveChatMessage.class);
+                GameMaster gm = gameMasters.get(msg.roomId);
+                yield mapper.writeValueAsString(new SendGraveChatService(msg.roomId, gm, this).call(msg));
+            }
+            default -> {
+                System.out.println("Unsupported message type: " + type);
+                yield null;
+            }
+        };
+    }
 }

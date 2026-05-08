@@ -1,13 +1,16 @@
 package src.server.service;
 
+import src.server.GameMaster;
 import src.server.GameStateManager;
 
 public abstract class BaseService {
     protected final String roomId;
+    protected final GameMaster gameMaster;
     protected final GameStateManager stateManager;
 
-    protected BaseService(String roomId, GameStateManager stateManager) {
+    protected BaseService(String roomId, GameMaster gameMaster) {
         this.roomId = roomId;
-        this.stateManager = stateManager;
+        this.gameMaster = gameMaster;
+        this.stateManager = gameMaster.getStateManager();
     }
 }
