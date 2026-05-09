@@ -1,4 +1,4 @@
-package src.server;
+package src.server.game;
 
 public enum GamePhase {
     WAITING,

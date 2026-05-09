@@ -4,6 +4,43 @@
 
 サーバー側のコードを格納するディレクトリです.
 
+### ディレクトリ構造
+
+```
+src/server/
+├── JabberServer.java          # エントリーポイント（main）・Broadcaster 実装
+├── game/                      # ゲームロジック
+│   ├── GameMaster.java        # roomId・Queue・Worker の管理
+│   ├── GameStateManager.java  # フェーズ保持・イベント条件判定
+│   ├── GamePhase.java         # enum: WAITING / NIGHT / MORNING / DISCUSSION / VOTE / EXECUTE / GAME_OVER
+│   └── GameEvent.java         # enum: NIGHT_ACTION_SUBMITTED / VOTE_SUBMITTED / DISCUSSION_ENDED
+├── core/                      # 通信インフラ・サービス基盤
+│   ├── Broadcaster.java       # interface: broadcast / sendTo / broadcastAlive など
+│   ├── BroadcastService.java  # interface: Worker が実行するサービスのマーカー
+│   ├── ClientRegistry.java    # プレイヤー接続管理・メッセージ配信
+│   ├── ServiceFactory.java    # ServiceType → BroadcastService インスタンス生成
+│   ├── ServiceType.java       # enum: DISTRIBUTE_ROLE / ANNOUNCE_MORNING / …
+│   └── Worker.java            # Queue を監視して BroadcastService を実行するスレッド
+├── database/                  # データ層
+│   ├── GameDatabase.java      # Singleton: roomId → RoomData マップ
+│   ├── RoomData.java          # ゲーム状態コンテナ
+│   ├── entity/                # データクラス・enum（Player, Role, ChatMessage）
+│   └── repository/            # CRUD のみ（Chat / Room / Player / NightAction / Vote）
+└── service/                   # Service 実装（クライアント起点・サーバー起点）
+```
+
+**パッケージ対応表**
+
+| ディレクトリ | パッケージ |
+|-------------|-----------|
+| `src/server/` | `src.server` |
+| `src/server/game/` | `src.server.game` |
+| `src/server/core/` | `src.server.core` |
+| `src/server/database/` | `src.server.database` |
+| `src/server/database/entity/` | `src.server.database.entity` |
+| `src/server/database/repository/` | `src.server.database.repository` |
+| `src/server/service/` | `src.server.service` |
+
 `JabberServer` でクライアントからの接続を受け付け、適切な Service クラスを call します。
 各 Service クラスは Request 引数を受け取って Request に応じた処理を行い、Response を返します。
 

@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.EndDiscussionMessage;
 import src.message.EndDiscussionResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class EndDiscussionService extends BaseService {
 
@@ -11,7 +11,10 @@ public class EndDiscussionService extends BaseService {
     }
 
     public EndDiscussionResultMessage call(EndDiscussionMessage msg) {
-        // 議論終了イベントを発火して投票フェーズへ遷移する
+        // stateManager.check(GameEvent.DISCUSSION_ENDED) を呼んでフェーズを VOTE に遷移させる
+        //   → discussionEnded フラグで二重呼び出しを防止済み
+        // gameMaster.pushService(ServiceType.VOTE_PHASE_START) をキューに積む
+        // 成功を EndDiscussionResultMessage に設定して返す
         return new EndDiscussionResultMessage();
     }
 }
