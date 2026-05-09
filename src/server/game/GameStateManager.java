@@ -1,6 +1,7 @@
-package src.server;
+package src.server.game;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import src.server.core.ServiceType;
 
 // per-room state container. check() reads repos and delegates pushService() to GameMaster.
 public class GameStateManager {

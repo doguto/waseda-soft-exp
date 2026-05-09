@@ -1,8 +1,8 @@
 package src.server.service;
 
-import src.server.Broadcaster;
-import src.server.BroadcastService;
-import src.server.GameMaster;
+import src.server.core.Broadcaster;
+import src.server.core.BroadcastService;
+import src.server.game.GameMaster;
 
 public class VotePhaseStartService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -14,6 +14,8 @@ public class VotePhaseStartService extends BaseService implements BroadcastServi
 
     @Override
     public void call() {
-        // フェーズを投票に設定する
+        // VoteRepository.reset(roomId) で前回の投票結果をクリアする
+        // stateManager.setPhase(GamePhase.VOTE) でフェーズを投票に設定する
+        // broadcaster.broadcastAlive(roomId, ...) で生存者に投票開始を通知する
     }
 }

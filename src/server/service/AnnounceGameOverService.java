@@ -1,8 +1,8 @@
 package src.server.service;
 
-import src.server.Broadcaster;
-import src.server.BroadcastService;
-import src.server.GameMaster;
+import src.server.core.Broadcaster;
+import src.server.core.BroadcastService;
+import src.server.game.GameMaster;
 
 public class AnnounceGameOverService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -14,6 +14,9 @@ public class AnnounceGameOverService extends BaseService implements BroadcastSer
 
     @Override
     public void call() {
-        // 勝利陣営と全プレイヤーの役職を含むゲーム終了メッセージをブロードキャストする
+        // PlayerRepository.wolvesWin(roomId) で勝利陣営 (WOLF / VILLAGE) を判定する
+        // RoomRepository.getPlayers(roomId) で全プレイヤーの名前とロールを取得する
+        // 勝利陣営と全プレイヤーのロール一覧を含むメッセージを broadcaster.broadcastAlive(roomId, ...) で通知する
+        //   → 人狼陣営が勝利した場合、CRAZY_VILLAGER も人狼陣営の勝者として扱う
     }
 }

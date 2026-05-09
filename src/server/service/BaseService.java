@@ -1,7 +1,7 @@
 package src.server.service;
 
-import src.server.GameMaster;
-import src.server.GameStateManager;
+import src.server.game.GameMaster;
+import src.server.game.GameStateManager;
 
 public abstract class BaseService {
     protected final String roomId;

@@ -1,4 +1,4 @@
-package src.server;
+package src.server.core;
 
 public enum ServiceType {
     DISTRIBUTE_ROLE,
