@@ -14,6 +14,11 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
 
     @Override
     public void call() {
-        // 人数に応じたロールリストをシャッフルして各プレイヤーに通知する
+        // RoomRepository.getPlayers(roomId) で全プレイヤーを取得する
+        // 人数に応じたロール構成のリスト (例: 4人→WOLF×1, SEER×1, KNIGHT×1, VILLAGER×1) を作成する
+        // Collections.shuffle() でリストをシャッフルする
+        // PlayerRepository.setRole(roomId, playerName, role) で各プレイヤーにロールを割り当てる
+        // broadcaster でロールを各プレイヤーにユニキャスト通知する
+        // gameMaster.pushService(ServiceType.NIGHT_PHASE_START) をキューに積む
     }
 }

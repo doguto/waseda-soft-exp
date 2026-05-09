@@ -11,7 +11,8 @@ public class DeleteRoomService extends BaseService {
     }
 
     public DeleteRoomResultMessage call(DeleteRoomMessage msg) {
-        // ルームを削除する
+        // RoomRepository.delete(roomId) でルームを削除する
+        // 成功/失敗を DeleteRoomResultMessage に設定して返す
         return new DeleteRoomResultMessage();
     }
 }

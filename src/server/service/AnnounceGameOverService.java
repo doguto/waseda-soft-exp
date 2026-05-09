@@ -14,6 +14,8 @@ public class AnnounceGameOverService extends BaseService implements BroadcastSer
 
     @Override
     public void call() {
-        // 勝利陣営と全プレイヤーの役職を含むゲーム終了メッセージをブロードキャストする
+        // PlayerRepository.wolvesWin(roomId) で勝利陣営 (WOLF / VILLAGE) を判定する
+        // RoomRepository.getPlayers(roomId) で全プレイヤーの名前とロールを取得する
+        // 勝利陣営と全プレイヤーのロール一覧を含むメッセージを broadcaster.broadcastAlive(roomId, ...) で通知する
     }
 }

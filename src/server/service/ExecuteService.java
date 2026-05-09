@@ -14,6 +14,11 @@ public class ExecuteService extends BaseService implements BroadcastService {
 
     @Override
     public void call() {
-        // 最多票プレイヤーを処刑してブロードキャスト、勝利判定後に次フェーズサービスをキューに積む
+        // VoteRepository.resolveTarget(roomId) で処刑対象を取得する
+        // PlayerRepository.kill(roomId, targetName) で処刑する
+        // 処刑者の名前とロールを broadcaster.broadcastAlive(roomId, ...) で全体通知する
+        // PlayerRepository.wolvesWin / villagersWin で勝利判定を行う
+        //   → 勝利なら gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER) をキューに積む
+        //   → 続行なら gameMaster.pushService(ServiceType.NIGHT_PHASE_START) をキューに積む
     }
 }

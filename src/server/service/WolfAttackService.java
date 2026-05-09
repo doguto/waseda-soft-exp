@@ -11,7 +11,10 @@ public class WolfAttackService extends BaseService {
     }
 
     public WolfAttackResultMessage call(WolfAttackMessage msg) {
-        // 狼の攻撃先を保存し、全夜アクション完了なら次フェーズへ遷移する
+        // NightActionRepository.saveWolfAttack(roomId, msg.wolfName, msg.targetName) で攻撃先を保存する
+        // stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED) を呼ぶ
+        //   → 全夜アクション完了なら GameStateManager が ANNOUNCE_MORNING をキューに積む
+        // 成功を WolfAttackResultMessage に設定して返す
         return new WolfAttackResultMessage();
     }
 }

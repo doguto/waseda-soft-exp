@@ -14,7 +14,10 @@ public class StartGameService extends BaseService {
     }
 
     public StartGameResultMessage call(StartGameMessage msg) {
-        // 最低人数確認後、ゲームを開始してロール配布サービスをキューに積む
+        // RoomRepository.canStart(roomId) で 4 人以上いるか確認する (不足時は失敗を返す)
+        // gameMaster.startWorker(broadcaster) でサービスキューのワーカースレッドを起動する
+        // gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE) をキューに積む
+        // 成功/失敗を StartGameResultMessage に設定して返す
         return new StartGameResultMessage();
     }
 }

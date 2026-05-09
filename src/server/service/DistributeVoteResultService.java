@@ -14,6 +14,8 @@ public class DistributeVoteResultService extends BaseService implements Broadcas
 
     @Override
     public void call() {
-        // 投票を集計して最多票プレイヤーと票数をブロードキャストし、処刑サービスをキューに積む
+        // VoteRepository.resolveTarget(roomId) で最多票プレイヤー (同票ならランダム) を取得する
+        // 各プレイヤーの得票数をまとめた結果を broadcaster.broadcastAlive(roomId, ...) で通知する
+        // gameMaster.pushService(ServiceType.EXECUTE) で処刑サービスをキューに積む
     }
 }

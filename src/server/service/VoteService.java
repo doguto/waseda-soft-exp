@@ -11,7 +11,11 @@ public class VoteService extends BaseService {
     }
 
     public VoteResultMessage call(VoteMessage msg) {
-        // 投票を保存し、全員投票済みなら次フェーズへ遷移する
+        // VoteRepository.save(roomId, msg.playerName, msg.targetName) で投票を保存する
+        // stateManager.check(GameEvent.VOTE_SUBMITTED) を呼ぶ
+        //   → 全生存者が投票済みなら GameStateManager が DISTRIBUTE_VOTE_RESULT をキューに積む
+        //   → compareAndSet で二重キューイングを防止済み
+        // 成功を VoteResultMessage に設定して返す
         return new VoteResultMessage();
     }
 }

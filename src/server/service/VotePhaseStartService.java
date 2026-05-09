@@ -14,6 +14,8 @@ public class VotePhaseStartService extends BaseService implements BroadcastServi
 
     @Override
     public void call() {
-        // フェーズを投票に設定する
+        // VoteRepository.reset(roomId) で前回の投票結果をクリアする
+        // stateManager.setPhase(GamePhase.VOTE) でフェーズを投票に設定する
+        // broadcaster.broadcastAlive(roomId, ...) で生存者に投票開始を通知する
     }
 }
