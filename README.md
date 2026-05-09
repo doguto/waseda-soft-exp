@@ -95,13 +95,15 @@ if (voteResolved.compareAndSet(false, true)) {
 
 | クラス | 責務 |
 |--------|------|
-| `JabberServer` | クライアント接続の受付・即時 Service の呼び出し・broadcast の実装 |
+| `JabberServer` | クライアント接続の受付・即時 Service の呼び出し・`Broadcaster` インターフェースの実装 |
+| `Broadcaster` | broadcast 系メソッドのインターフェース。`JabberServer` が実装し、Service に注入される |
+| `ClientRegistry` | 接続中クライアントの `PrintWriter` と部屋ごとのプレイヤー集合を管理。broadcast の実体 |
 | `Service`（各実装） | Repository で CRUD → `GameStateManager.check()` → Response を返す |
 | `XxxRepository` | データの CRUD のみ。ゲームロジックを持たない |
 | `GameStateManager` | `currentPhase` の保持・`check(event)` での条件判定・`pushService()` の呼び出し |
-| `GameMaster` | `roomId` / `players` などの設定保持・Queue と Worker の管理・`pushService()` の提供 |
+| `GameMaster` | `roomId` の保持・Queue と Worker の管理・`pushService()` の提供 |
 | `Worker`（スレッド） | Queue を監視し、ServiceFactory 経由で Service を実行 |
-| `ServiceFactory` | ServiceType → Service インスタンスの生成 |
+| `ServiceFactory` | `ServiceType` → `BroadcastService` インスタンスの生成 |
 
 ### クラス図
 
@@ -109,11 +111,10 @@ if (voteResolved.compareAndSet(false, true)) {
 classDiagram
     class GameMaster {
         -String roomId
-        -List~Player~ players
         -BlockingQueue~ServiceType~ queue
         -GameStateManager stateManager
         +pushService(ServiceType) void
-        +startWorker() void
+        +startWorker(Broadcaster broadcaster) void
     }
 
     class GameStateManager {
@@ -122,13 +123,22 @@ classDiagram
         +check(GameEvent) void
     }
 
-    class Service {
+    class BroadcastService {
         <<interface>>
-        +call(Object payload) void
+        +call() void
+    }
+
+    class Broadcaster {
+        <<interface>>
+        +broadcast(String roomId, Object message) void
+        +sendTo(String playerName, Object message) void
+        +broadcastAlive(String roomId, Object message) void
+        +broadcastToRole(String roomId, Role role, Object message) void
+        +broadcastDead(String roomId, Object message) void
     }
 
     class ServiceFactory {
-        +create(ServiceType, GameMaster) Service
+        +create(ServiceType, GameMaster, Broadcaster) BroadcastService
     }
 
     class Worker {
@@ -137,14 +147,12 @@ classDiagram
     }
 
     class JabberServer {
-        +broadcast(GameEvent event) void
-        +sendTo(String playerName, GameEvent event) void
+        -ClientRegistry clientRegistry
     }
 
     class VoteService {
         -VoteRepository voteRepository
-        -GameStateManager stateManager
-        +call(Object payload) void
+        +call(VoteMessage) VoteResultMessage
     }
 
     class VoteRepository {
@@ -152,11 +160,11 @@ classDiagram
         +allVoted(String roomId) boolean
     }
 
+    JabberServer ..|> Broadcaster
     GameMaster "1" --> "1" GameStateManager
     GameMaster "1" --> "1" Worker
     Worker --> ServiceFactory : create(type)
-    ServiceFactory --> Service
-    Service <|.. VoteService
+    ServiceFactory --> BroadcastService
     VoteService --> VoteRepository
     VoteService --> GameStateManager : check(event)
     GameStateManager --> GameMaster : pushService()
@@ -189,11 +197,11 @@ stateDiagram-v2
 
 | イベント | 発火条件 | 方式 |
 |----------|----------|------|
-| 夜フェーズ終了 → 朝へ | 全役職の夜行動完了 | check(NIGHT_ACTION_SUBMITTED) |
-| 投票集計 | 全員投票完了 OR 投票タイマー切れ | check(VOTE_SUBMITTED) + AtomicBoolean |
-| 議論終了 → 投票へ | ボタン押下 OR 議論タイマー切れ | check(DISCUSSION_ENDED) + AtomicBoolean |
-| 処刑 → 勝利判定 | 投票集計完了後 | Queue 連鎖 |
-| ゲーム終了 | 勝利条件成立 | Queue 連鎖 |
+| 夜フェーズ終了 → 朝へ | 全役職の夜行動完了 | `check(NIGHT_ACTION_SUBMITTED)` → `ANNOUNCE_MORNING` |
+| 投票集計 | 全員投票完了 OR 投票タイマー切れ | `check(VOTE_SUBMITTED)` + AtomicBoolean → `DISTRIBUTE_VOTE_RESULT` |
+| 議論終了 → 投票へ | ボタン押下 OR 議論タイマー切れ | `check(DISCUSSION_ENDED)` + AtomicBoolean → `VOTE_PHASE_START` |
+| 処刑 → 勝利判定 | 投票集計完了後 | Queue 連鎖 (`EXECUTE`) |
+| ゲーム終了 | 勝利条件成立 | Queue 連鎖 (`ANNOUNCE_GAME_OVER`) |
 
 ---
 
@@ -215,11 +223,13 @@ stateDiagram-v2
 | `DeleteRoomService` | クライアント | ルーム削除時 |
 | `StartGameService` | クライアント | ゲーム開始ボタン押下 |
 | `DistributeRoleService` | **サーバー (broadcast)** | StartGameService 完了後 → Queue |
+| `NightPhaseStartService` | **サーバー (broadcast)** | DistributeRoleService 完了後、または ExecuteService でゲーム継続 → Queue 連鎖 |
 | `WolfAttackService` | クライアント（人狼のみ） | 夜フェーズに人狼が襲撃対象を選択 |
 | `SeerInvestigateService` | クライアント（占い師のみ） | 夜フェーズに占い師が調査対象を選択 |
 | `KnightGuardService` | クライアント（騎士のみ） | 夜フェーズに騎士が護衛対象を選択 |
 | `AnnounceMorningService` | **サーバー (broadcast)** | 全役職の夜行動完了 → `check(NIGHT_ACTION_SUBMITTED)` → Queue |
 | `EndDiscussionService` | クライアント or タイマー | 議論終了ボタン押下 / 議論タイマー切れ |
+| `VotePhaseStartService` | **サーバー (broadcast)** | EndDiscussionService 完了後 → Queue |
 | `VoteService` | クライアント | 投票フェーズに各プレイヤーが投票 |
 | `DistributeVoteResultService` | **サーバー (broadcast)** | 全員投票完了 or 投票タイマー切れ → `check(VOTE_SUBMITTED)` → Queue |
 | `ExecuteService` | **サーバー (broadcast)** | DistributeVoteResultService 完了後 → Queue 連鎖 |
@@ -244,20 +254,23 @@ flowchart TD
 
     WAITING -->|4人以上| SS[StartGameService]:::clientSvc
     SS --> DR["DistributeRoleService<br/>broadcast: 役職配布"]:::serverSvc
-    DR --> NIGHT1([1夜目]):::phase
+    DR --> NPS1["NightPhaseStartService<br/>broadcast: 夜開始"]:::serverSvc
+    NPS1 --> NIGHT1([1夜目]):::phase
 
     NIGHT1 --> SI1["SeerInvestigateService<br/>占い師のみ行動"]:::clientSvc
     SI1 -->|全行動完了| AM1["AnnounceMorningService<br/>broadcast: 朝アナウンス"]:::serverSvc
     AM1 --> DISC1([昼: 議論]):::phase
 
     DISC1 --> ED["EndDiscussionService<br/>ボタン or タイマー"]:::clientSvc
-    ED --> VOTE([投票フェーズ]):::phase
+    ED --> VPS["VotePhaseStartService<br/>broadcast: 投票開始"]:::serverSvc
+    VPS --> VOTE([投票フェーズ]):::phase
 
     VOTE --> VS["VoteService<br/>各プレイヤー投票"]:::clientSvc
     VS -->|全員投票 or タイマー切れ| DVR["DistributeVoteResultService<br/>broadcast: 投票結果"]:::serverSvc
     DVR --> EX["ExecuteService<br/>broadcast: 処刑"]:::serverSvc
 
-    EX -->|ゲーム継続| NIGHTN([N夜目]):::phase
+    EX -->|ゲーム継続| NPSN["NightPhaseStartService<br/>broadcast: 夜開始"]:::serverSvc
+    NPSN --> NIGHTN([N夜目]):::phase
     EX -->|勝利条件成立| AGO["AnnounceGameOverService<br/>broadcast: ゲーム終了"]:::serverSvc
 
     NIGHTN --> WA["WolfAttackService<br/>人狼の襲撃"]:::clientSvc
@@ -270,10 +283,10 @@ flowchart TD
 
 ### GameStateManager.check() イベント一覧
 
-| GameEvent | チェック条件 | 成立時に Queue に積む ServiceType |
+| GameEvent | チェック条件 | 成立時の動作 |
 |-----------|------------|----------------------------------|
-| `NIGHT_ACTION_SUBMITTED` | 当該夜に必要な全役職の行動が完了した | `ANNOUNCE_MORNING` |
-| `VOTE_SUBMITTED` | 全員投票完了 **または** 投票タイマー切れ | `DISTRIBUTE_VOTE_RESULT` |
-| `DISCUSSION_ENDED` | 議論終了ボタン押下 **または** 議論タイマー切れ | （投票フェーズ開始） |
+| `NIGHT_ACTION_SUBMITTED` | 当該夜に必要な全役職の行動が完了した | `ANNOUNCE_MORNING` をキューに積む |
+| `VOTE_SUBMITTED` | 全員投票完了 **または** 投票タイマー切れ | `DISTRIBUTE_VOTE_RESULT` をキューに積む（AtomicBoolean で一度だけ） |
+| `DISCUSSION_ENDED` | 議論終了ボタン押下 **または** 議論タイマー切れ | フェーズを `VOTE` に更新（AtomicBoolean で一度だけ）。`VOTE_PHASE_START` のキュー投入は呼び出し元の `EndDiscussionService` が行う |
 
 > **二重発火防止**: `AtomicBoolean.compareAndSet(false, true)` により、タイマーとボタン押下が競合しても Queue へは1度だけ積まれる。
