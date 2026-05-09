@@ -1,8 +1,8 @@
 package src.server.service;
 
-import src.server.Broadcaster;
-import src.server.BroadcastService;
-import src.server.GameMaster;
+import src.server.core.Broadcaster;
+import src.server.core.BroadcastService;
+import src.server.game.GameMaster;
 
 public class ExecuteService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;

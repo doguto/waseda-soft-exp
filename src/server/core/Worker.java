@@ -1,6 +1,7 @@
-package src.server;
+package src.server.core;
 
 import java.util.concurrent.BlockingQueue;
+import src.server.game.GameMaster;
 
 public class Worker implements Runnable {
     private final BlockingQueue<ServiceType> queue;

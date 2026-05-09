@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.WolfAttackMessage;
 import src.message.WolfAttackResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class WolfAttackService extends BaseService {
 

@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.KnightGuardMessage;
 import src.message.KnightGuardResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class KnightGuardService extends BaseService {
 

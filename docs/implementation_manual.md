@@ -140,7 +140,7 @@ public CreateRoomResultMessage call(CreateRoomMessage msg) {
 }
 ```
 
-**必要なimport**: `src.server.database.entity.Player`, `src.server.GamePhase`, `src.server.database.repository.RoomRepository`
+**必要なimport**: `src.server.database.entity.Player`, `src.server.game.GamePhase`, `src.server.database.repository.RoomRepository`
 
 ---
 

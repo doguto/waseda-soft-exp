@@ -1,5 +1,6 @@
-package src.server;
+package src.server.core;
 
+import src.server.game.GameMaster;
 import src.server.service.*;
 
 public class ServiceFactory {

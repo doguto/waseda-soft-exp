@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.VoteMessage;
 import src.message.VoteResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class VoteService extends BaseService {
 

@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.SeerInvestigateMessage;
 import src.message.SeerInvestigateResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class SeerInvestigateService extends BaseService {
 

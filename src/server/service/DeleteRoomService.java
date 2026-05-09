@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.DeleteRoomMessage;
 import src.message.DeleteRoomResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class DeleteRoomService extends BaseService {
 

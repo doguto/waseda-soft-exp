@@ -2,8 +2,8 @@ package src.server.service;
 
 import src.message.StartGameMessage;
 import src.message.StartGameResultMessage;
-import src.server.Broadcaster;
-import src.server.GameMaster;
+import src.server.core.Broadcaster;
+import src.server.game.GameMaster;
 
 public class StartGameService extends BaseService {
     private final Broadcaster broadcaster;

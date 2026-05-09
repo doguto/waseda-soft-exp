@@ -1,4 +1,4 @@
-package src.server;
+package src.server.core;
 
 // Implemented by JabberServer. Broadcast services use this to send messages without touching sockets directly.
 public interface Broadcaster {

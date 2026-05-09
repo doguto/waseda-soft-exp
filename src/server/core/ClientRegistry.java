@@ -1,4 +1,4 @@
-package src.server;
+package src.server.core;
 
 import java.io.PrintWriter;
 import java.util.Map;

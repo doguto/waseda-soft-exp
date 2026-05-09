@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.CreateRoomMessage;
 import src.message.CreateRoomResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class CreateRoomService extends BaseService {
 

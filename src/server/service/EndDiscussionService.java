@@ -2,7 +2,7 @@ package src.server.service;
 
 import src.message.EndDiscussionMessage;
 import src.message.EndDiscussionResultMessage;
-import src.server.GameMaster;
+import src.server.game.GameMaster;
 
 public class EndDiscussionService extends BaseService {
 
