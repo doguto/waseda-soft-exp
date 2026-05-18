@@ -1,23 +1,18 @@
 package src.server.service;
 
+import java.util.Optional;
 import src.message.ExecuteMessage;
-import src.server.core.Broadcaster;
 import src.server.core.BroadcastService;
+import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
 import src.server.database.entity.Player;
-import src.server.database.repository.PlayerRepository;
-import src.server.database.repository.VoteRepository;
 import src.server.database.repository.VoteRepository.VoteResolution;
 import src.server.game.GameMaster;
 
-import java.util.Optional;
-
 public class ExecuteService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
-    private final VoteRepository voteRepo = new VoteRepository();
-    private final PlayerRepository playerRepo = new PlayerRepository();
 
     public ExecuteService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
         super(roomId, gameMaster);
@@ -27,7 +22,7 @@ public class ExecuteService extends BaseService implements BroadcastService {
     @Override
     public void call() {
         // VoteRepository.resolveTarget(roomId) で処刑対象を取得する
-        VoteResolution resolution = voteRepo.resolveTarget(roomId);
+        VoteResolution resolution = gameMaster.voteRepository.resolveTarget(roomId);
         Optional<String> targetName = resolution.target();
 
         RoomData room = GameDatabase.getInstance().getRoom(roomId);
@@ -37,19 +32,19 @@ public class ExecuteService extends BaseService implements BroadcastService {
 
         String executedRole = null;
         if (targetName.isPresent()) {
-            Optional<Player> targetPlayer = playerRepo.findByName(roomId, targetName.get());
+            Optional<Player> targetPlayer = gameMaster.playerRepository.findByName(roomId, targetName.get());
             executedRole = targetPlayer.map(player -> player.role.name()).orElse(null);
-            playerRepo.kill(roomId, targetName.get());
+            gameMaster.playerRepository.kill(roomId, targetName.get());
         }
 
         // 処刑者の名前とロールはルーム内の全員に通知する
         broadcaster.broadcast(roomId, new ExecuteMessage(targetName.orElse(null), executedRole));
 
         // VoteRepository.reset(roomId) で投票をリセットする
-        voteRepo.reset(roomId);
+        gameMaster.voteRepository.reset(roomId);
 
         // PlayerRepository.wolvesWin / villagersWin で勝利判定を行う
-        if (playerRepo.villagersWin(roomId) || playerRepo.wolvesWin(roomId)) {
+        if (gameMaster.playerRepository.villagersWin(roomId) || gameMaster.playerRepository.wolvesWin(roomId)) {
             // 勝利なら gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER) をキューに積む
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {

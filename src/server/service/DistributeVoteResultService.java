@@ -1,16 +1,14 @@
 package src.server.service;
 
 import src.message.DistributeVoteResultMessage;
+import src.server.core.BroadcastService;
 import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
-import src.server.core.BroadcastService;
-import src.server.database.repository.VoteRepository;
 import src.server.database.repository.VoteRepository.VoteResolution;
 import src.server.game.GameMaster;
 
 public class DistributeVoteResultService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
-    private final VoteRepository voteRepo = new VoteRepository();
 
     public DistributeVoteResultService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
         super(roomId, gameMaster);
@@ -20,7 +18,7 @@ public class DistributeVoteResultService extends BaseService implements Broadcas
     @Override
     public void call() {
         // VoteRepository.resolveTarget(roomId) で最多票プレイヤー (同票ならランダム) と集計結果を取得する
-        VoteResolution resolution = voteRepo.resolveTarget(roomId);
+        VoteResolution resolution = gameMaster.voteRepository.resolveTarget(roomId);
         String targetName = resolution.target().orElse(null);
 
         // 各プレイヤーの得票数をまとめた結果をルーム全体へ通知する
