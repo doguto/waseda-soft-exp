@@ -1,5 +1,99 @@
 # プロジェクト構成
 
+## client
+
+GUIクライアント側のコードを格納するディレクトリです。
+
+### ディレクトリ構造
+
+```
+src/client/
+├── GUIClient.java              # エントリーポイント（main）
+├── state/
+│   ├── GamePhase.java          # enum: LOBBY / WAITING / NIGHT / DAY_DISCUSSION / DAY_VOTE / GAME_OVER
+│   ├── GameStateListener.java  # interface: UI通知用 Observer
+│   └── GameState.java          # ゲーム状態の単一ソース（myName / myRole / phase / players / chatLog）
+├── network/
+│   ├── ServerConnection.java   # Socket管理・send(Object) でJSONシリアライズして送信
+│   └── MessageReceiver.java    # 受信専用デーモンスレッド → MessageDispatcher へ委譲
+├── dispatch/
+│   └── MessageDispatcher.java  # message_type → Consumer<JsonNode> のルーティングテーブル
+└── ui/
+    ├── MainFrame.java          # JFrame + CardLayout（LOBBY / GAME 画面切り替え）
+    ├── LobbyPanel.java         # 接続フォーム（ホスト・プレイヤー名・ルームID）
+    ├── GamePanel.java          # ゲーム画面の外枠（子パネルへ通知を委譲）
+    ├── ChatPanel.java          # チャットログ表示 + 入力欄
+    ├── PlayerListPanel.java    # プレイヤー一覧 + 役職・フェーズ表示
+    └── ActionPanel.java        # アクションボタン（フェーズ × 役職で動的切り替え）
+```
+
+**パッケージ対応表**
+
+| ディレクトリ | パッケージ |
+|-------------|-----------|
+| `src/client/` | `src.client` |
+| `src/client/state/` | `src.client.state` |
+| `src/client/network/` | `src.client.network` |
+| `src/client/dispatch/` | `src.client.dispatch` |
+| `src/client/ui/` | `src.client.ui` |
+
+### アーキテクチャ概要
+
+#### データフロー
+
+```
+【送信】 UIボタン操作 → ActionPanel / ChatPanel → ServerConnection.send()
+
+【受信】 MessageReceiver（デーモンスレッド）
+          → MessageDispatcher.dispatch(json)
+          → GameState 更新
+          → GameState.notifyListeners()
+          → SwingUtilities.invokeLater() でEDTに切り替え
+          → 各 Panel の onStateChanged() が呼ばれて再描画
+```
+
+#### クライアント フェーズ遷移
+
+```mermaid
+stateDiagram-v2
+    [*] --> LOBBY : 起動時
+
+    LOBBY --> WAITING       : create_room_result / join_room_result（success）
+    WAITING --> NIGHT       : distribute_role 受信
+    NIGHT --> DAY_DISCUSSION: announce_morning 受信
+    DAY_DISCUSSION --> DAY_VOTE : end_discussion_result（success）
+    DAY_VOTE --> NIGHT      : execute 受信（ゲーム継続）
+    DAY_VOTE --> GAME_OVER  : announce_game_over 受信
+    GAME_OVER --> [*]
+```
+
+#### ActionPanel のフェーズ × 役職マトリクス
+
+| フェーズ | 全役職共通 | WOLF | SEER | KNIGHT | VILLAGER |
+|----------|-----------|------|------|--------|----------|
+| WAITING | ゲーム開始ボタン | | | | |
+| DAY_DISCUSSION | 議論終了ボタン | | | | |
+| DAY_VOTE | 投票先選択 + 投票ボタン | | | | |
+| NIGHT | — | 襲撃対象選択 | 占い対象選択 | 守護対象選択 | 待機表示 |
+| GAME_OVER | ゲーム終了表示 | | | | |
+
+#### スレッド安全性
+
+受信スレッド（`MessageReceiver`）は Swing の EDT（Event Dispatch Thread）とは別スレッドです。
+`GameState.notifyListeners()` 内で `SwingUtilities.invokeLater()` を呼ぶことで、
+UI 更新を常に EDT 上で実行します。Swing コンポーネントを受信スレッドから直接触れてはいけません。
+
+```java
+// GameState.java
+public void notifyListeners() {
+    SwingUtilities.invokeLater(() ->
+        listeners.forEach(l -> l.onStateChanged(this))
+    );
+}
+```
+
+---
+
 ## server
 
 サーバー側のコードを格納するディレクトリです.
