@@ -17,9 +17,9 @@ public class GameMaster {
     private final BlockingQueue<ServiceType> queue = new LinkedBlockingQueue<>();
     private final GameStateManager stateManager;
 
-    private final NightActionRepository nightActionRepo = new NightActionRepository();
-    private final PlayerRepository playerRepo = new PlayerRepository();
-    private final VoteRepository voteRepo = new VoteRepository();
+    public final NightActionRepository nightActionRepository = new NightActionRepository();
+    public final PlayerRepository playerRepository = new PlayerRepository();
+    public final VoteRepository voteRepository = new VoteRepository();
 
     public GameMaster(String roomId) {
         this.roomId = roomId;
@@ -40,21 +40,21 @@ public class GameMaster {
 
     public boolean allNightActionsComplete() {
         if (stateManager.isFirstNight()) {
-            return nightActionRepo.getSeerTarget(roomId).isPresent();
+            return nightActionRepository.getSeerTarget(roomId).isPresent();
         }
-        List<Player> alive = playerRepo.getAlivePlayers(roomId);
+        List<Player> alive = playerRepository.getAlivePlayers(roomId);
         boolean hasWolf   = alive.stream().anyMatch(p -> p.role == Role.WOLF);
         boolean hasSeer   = alive.stream().anyMatch(p -> p.role == Role.SEER);
         boolean hasKnight = alive.stream().anyMatch(p -> p.role == Role.KNIGHT);
 
-        if (hasWolf   && !nightActionRepo.allWolvesAttacked(roomId))      return false;
-        if (hasSeer   && nightActionRepo.getSeerTarget(roomId).isEmpty())  return false;
-        if (hasKnight && nightActionRepo.getKnightTarget(roomId).isEmpty())return false;
+        if (hasWolf   && !nightActionRepository.allWolvesAttacked(roomId))      return false;
+        if (hasSeer   && nightActionRepository.getSeerTarget(roomId).isEmpty())  return false;
+        if (hasKnight && nightActionRepository.getKnightTarget(roomId).isEmpty())return false;
         return true;
     }
 
     public boolean allVoted() {
-        return voteRepo.allVoted(roomId);
+        return voteRepository.allVoted(roomId);
     }
 
     // ── getters ──────────────────────────────────────────────────────────────
