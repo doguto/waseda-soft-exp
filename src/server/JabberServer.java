@@ -13,6 +13,7 @@ import java.io.*;
 import java.net.*;
 import java.util.Map;
 import java.util.concurrent.*;
+import src.server.database.repository.RoomRepository;
 
 public class JabberServer implements Broadcaster {
     public static final int PORT = 8080;
@@ -20,6 +21,7 @@ public class JabberServer implements Broadcaster {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ClientRegistry registry = new ClientRegistry();
     private final Map<String, GameMaster> gameMasters = new ConcurrentHashMap<>();
+    private final RoomRepository roomRepository = new RoomRepository();
 
     // ── Broadcaster implementation ───────────────────────────────────────────
 
@@ -91,6 +93,7 @@ public class JabberServer implements Broadcaster {
         }
     }
 
+    // リクエストを対応するServiceクラスにルーティングして処理する
     private String route(String json, PrintWriter out, String[] connectedPlayerName) throws Exception {
         JsonNode node = mapper.readTree(json);
         String type = node.has("message_type") ? node.get("message_type").asText() : null;
@@ -107,7 +110,7 @@ public class JabberServer implements Broadcaster {
                 registry.register(msg.name, out);
                 registry.joinRoom(msg.roomId, msg.name);
                 connectedPlayerName[0] = msg.name;
-                CreateRoomResultMessage res = new CreateRoomService(msg.roomId, gm).call(msg);
+                CreateRoomResultMessage res = new CreateRoomService(msg.roomId, gm, roomRepository).call(msg);
                 yield mapper.writeValueAsString(res);
             }
             case JoinRoomMessage.MessageType -> {
@@ -116,13 +119,13 @@ public class JabberServer implements Broadcaster {
                 registry.register(msg.name, out);
                 registry.joinRoom(msg.roomId, msg.name);
                 connectedPlayerName[0] = msg.name;
-                yield mapper.writeValueAsString(new JoinRoomService(msg.roomId, gm).call(msg));
+                yield mapper.writeValueAsString(new JoinRoomService(msg.roomId, gm, roomRepository).call(msg));
             }
             case DeleteRoomMessage.MessageType -> {
                 DeleteRoomMessage msg = mapper.readValue(json, DeleteRoomMessage.class);
                 GameMaster gm = gameMasters.remove(msg.roomId);
                 if (gm == null) yield mapper.writeValueAsString(new DeleteRoomResultMessage(false));
-                yield mapper.writeValueAsString(new DeleteRoomService(msg.roomId, gm).call(msg));
+                yield mapper.writeValueAsString(new DeleteRoomService(msg.roomId, gm, roomRepository).call(msg));
             }
             case StartGameMessage.MessageType -> {
                 StartGameMessage msg = mapper.readValue(json, StartGameMessage.class);
