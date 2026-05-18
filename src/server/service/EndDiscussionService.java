@@ -5,6 +5,7 @@ import src.message.EndDiscussionResultMessage;
 import src.server.core.ServiceType;
 import src.server.game.GameEvent;
 import src.server.game.GameMaster;
+import src.server.game.GamePhase;
 
 public class EndDiscussionService extends BaseService {
 
@@ -29,6 +30,16 @@ public class EndDiscussionService extends BaseService {
         // 成功した（AtomicBoolean の勝者）スレッドのみがこの service 側で pushService を
         // 実行できるようにリファクタリングすることを提案します（他のVOTE_SUBMITTED等の処理と共通化）。
 
+
+        // synchronized (stateManager) {
+        //     if (stateManager.getCurrentPhase() != GamePhase.VOTE) {
+        //         // stateManager.check(GameEvent.DISCUSSION_ENDED) を呼んでフェーズを VOTE に遷移させる
+        //         stateManager.check(GameEvent.DISCUSSION_ENDED);
+        //         //   → discussionEnded フラグで二重呼び出しを防止済み
+        //         // gameMaster.pushService(ServiceType.VOTE_PHASE_START) をキューに積む
+        //         gameMaster.pushService(ServiceType.VOTE_PHASE_START);
+        //     }
+        // }
 
         // 成功を EndDiscussionResultMessage に設定して返す
         return new EndDiscussionResultMessage();

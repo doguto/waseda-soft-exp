@@ -14,6 +14,8 @@ public class VoteRepository {
     private final GameDatabase db = GameDatabase.getInstance();
     private final PlayerRepository playerRepository = new PlayerRepository();
 
+    public record VoteResolution(Optional<String> target, Map<String, Integer> counts) {}
+
     public void save(String roomId, String playerName, String targetName) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.votes.put(playerName, targetName);
@@ -26,21 +28,24 @@ public class VoteRepository {
         return room.votes.size() >= alivePlayers;
     }
 
-    // 最多票のプレイヤーを返す。同票の場合はランダムで決定する。
-    public Optional<String> resolveTarget(String roomId) {
+    // 最多票のプレイヤーと得票数を返す。同票の場合はランダムで決定する。
+    public VoteResolution resolveTarget(String roomId) {
         RoomData room = db.getRoom(roomId);
-        if (room == null || room.votes.isEmpty()) return Optional.empty();
+        if (room == null || room.votes.isEmpty()) {
+            return new VoteResolution(Optional.empty(), Map.of());
+        }
 
         Map<String, String> votes = room.votes;
 
-        Map<String, Long> counts = votes.values().stream()
-            .collect(Collectors.groupingBy(t -> t, Collectors.counting()));
+        Map<String, Integer> counts = votes.values().stream()
+            .collect(Collectors.groupingBy(t -> t, Collectors.summingInt(t -> 1)));
         long max = Collections.max(counts.values());
         List<String> top = counts.entrySet().stream()
             .filter(e -> e.getValue() == max)
             .map(Map.Entry::getKey)
             .collect(Collectors.toList());
-        return Optional.of(top.get(new Random().nextInt(top.size())));
+        Optional<String> target = Optional.of(top.get(new Random().nextInt(top.size())));
+        return new VoteResolution(target, counts);
     }
 
     public void reset(String roomId) {
