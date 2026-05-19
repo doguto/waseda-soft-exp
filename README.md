@@ -1,4 +1,23 @@
-# 人狼ゲーム サーバー実装
+# 人狼ゲーム
+
+TCP ソケット通信による人狼ゲームの**サーバー＋GUIクライアント**実装です。
+
+## クイックスタート
+
+```powershell
+# 1. コンパイル
+pwsh scripts/compile.ps1
+
+# 2. サーバー起動（別ターミナル）
+pwsh scripts/run.ps1 -Target server
+
+# 3. クライアント起動（プレイヤー数分）
+pwsh scripts/run.ps1 -Target client
+```
+
+> 最低4人のプレイヤーが参加するとゲームを開始できます。
+
+---
 
 ## タスク一覧
 
@@ -15,6 +34,13 @@
 ---
 
 ## プロジェクト構成
+
+### client
+
+GUIクライアント側のコードを格納するディレクトリです。
+
+Swing で実装された GUI クライアント。サーバーと TCP 接続し、人狼ゲームをプレイします。
+詳細は [docs/architecture.md](docs/architecture.md#client) を参照してください。
 
 ### server
 
