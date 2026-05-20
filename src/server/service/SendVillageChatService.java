@@ -4,12 +4,10 @@ import src.message.ChatBroadcastMessage;
 import src.message.SendChatResultMessage;
 import src.message.SendVillageChatMessage;
 import src.server.core.Broadcaster;
-import src.server.game.GameMaster;
 import src.server.database.entity.ChatMessage;
-import src.server.database.repository.ChatRepository;
+import src.server.game.GameMaster;
 
 public class SendVillageChatService extends BaseService {
-    private final ChatRepository chatRepo = new ChatRepository();
     private final Broadcaster broadcaster;
 
     public SendVillageChatService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -18,7 +16,7 @@ public class SendVillageChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendVillageChatMessage msg) {
-        chatRepo.addVillageMessage(msg.roomId, new ChatMessage(msg.senderName, msg.text));
+        gameMaster.chatRepository.addVillageMessage(msg.roomId, new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcastAlive(msg.roomId,
             new ChatBroadcastMessage("VILLAGE", msg.senderName, msg.text));
         return new SendChatResultMessage(true);
