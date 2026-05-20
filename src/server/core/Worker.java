@@ -20,7 +20,14 @@ public class Worker implements Runnable {
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 ServiceType type = queue.take();
-                factory.create(type, gameMaster, broadcaster).call();
+                System.out.println("[WORKER] Executing: " + type + " room=" + gameMaster.getRoomId());
+                try {
+                    factory.create(type, gameMaster, broadcaster).call();
+                    System.out.println("[WORKER] Completed: " + type + " room=" + gameMaster.getRoomId());
+                } catch (Exception e) {
+                    System.out.println("[ERROR] Worker service failed: " + type + " room=" + gameMaster.getRoomId() + " " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

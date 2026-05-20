@@ -3,12 +3,11 @@ package src.server.service;
 import src.message.CreateRoomMessage;
 import src.message.CreateRoomResultMessage;
 import src.server.database.entity.Player;
-import src.server.database.repository.RoomRepository;
 import src.server.game.GameMaster;
 
 public class CreateRoomService extends BaseService {
-    public CreateRoomService(String roomId, GameMaster gameMaster, RoomRepository roomRepository) {
-        super(roomId, gameMaster, roomRepository);
+    public CreateRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
     public CreateRoomResultMessage call(CreateRoomMessage msg) {

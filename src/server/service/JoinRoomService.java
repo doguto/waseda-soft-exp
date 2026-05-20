@@ -4,13 +4,12 @@ import java.util.List;
 import src.message.JoinRoomMessage;
 import src.message.JoinRoomResultMessage;
 import src.server.database.entity.Player;
-import src.server.database.repository.RoomRepository;
 import src.server.game.GameMaster;
 
 public class JoinRoomService extends BaseService {
 
-    public JoinRoomService(String roomId, GameMaster gameMaster, RoomRepository roomRepository) {
-        super(roomId, gameMaster, roomRepository);
+    public JoinRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
     public JoinRoomResultMessage call(JoinRoomMessage msg) {

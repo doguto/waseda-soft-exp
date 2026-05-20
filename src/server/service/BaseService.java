@@ -14,13 +14,6 @@ public abstract class BaseService {
         this.roomId = roomId;
         this.gameMaster = gameMaster;
         stateManager = gameMaster.getStateManager();
-        roomRepository = null;
-    }
-
-    protected BaseService(String roomId, GameMaster gameMaster, RoomRepository roomRepository) {
-        this.roomId = roomId;
-        this.gameMaster = gameMaster;
-        this.stateManager = gameMaster.getStateManager();
-        this.roomRepository = roomRepository;
+        roomRepository = new RoomRepository();
     }
 }

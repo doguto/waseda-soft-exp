@@ -2,13 +2,11 @@ package src.server.service;
 
 import src.message.DeleteRoomMessage;
 import src.message.DeleteRoomResultMessage;
-import src.server.database.repository.RoomRepository;
 import src.server.game.GameMaster;
 
 public class DeleteRoomService extends BaseService {
-
-    public DeleteRoomService(String roomId, GameMaster gameMaster, RoomRepository roomRepository) {
-        super(roomId, gameMaster, roomRepository);
+    public DeleteRoomService(String roomId, GameMaster gameMaster) {
+        super(roomId, gameMaster);
     }
 
     public DeleteRoomResultMessage call(DeleteRoomMessage msg) {
