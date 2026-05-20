@@ -1,7 +1,10 @@
 package src.server.service;
 
-import src.server.core.Broadcaster;
+import src.message.DistributeVoteResultMessage;
 import src.server.core.BroadcastService;
+import src.server.core.Broadcaster;
+import src.server.core.ServiceType;
+import src.server.database.repository.VoteRepository.VoteResolution;
 import src.server.game.GameMaster;
 
 public class DistributeVoteResultService extends BaseService implements BroadcastService {
@@ -14,8 +17,13 @@ public class DistributeVoteResultService extends BaseService implements Broadcas
 
     @Override
     public void call() {
-        // VoteRepository.resolveTarget(roomId) で最多票プレイヤー (同票ならランダム) を取得する
-        // 各プレイヤーの得票数をまとめた結果を broadcaster.broadcastAlive(roomId, ...) で通知する
+        // VoteRepository.resolveTarget(roomId) で最多票プレイヤー (同票ならランダム) と集計結果を取得する
+        VoteResolution resolution = gameMaster.voteRepository.resolveTarget(roomId);
+        String targetName = resolution.target().orElse(null);
+
+        // 各プレイヤーの得票数をまとめた結果をルーム全体へ通知する
+        broadcaster.broadcast(roomId, new DistributeVoteResultMessage(targetName, resolution.counts()));
         // gameMaster.pushService(ServiceType.EXECUTE) で処刑サービスをキューに積む
+        gameMaster.pushService(ServiceType.EXECUTE);
     }
 }
