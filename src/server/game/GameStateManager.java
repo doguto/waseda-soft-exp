@@ -33,6 +33,7 @@ public class GameStateManager {
             case DISCUSSION_ENDED -> {
                 if (discussionEnded.compareAndSet(false, true)) {
                     currentPhase = GamePhase.VOTE;
+                    gameMaster.pushService(ServiceType.VOTE_PHASE_START);
                 }
             }
         }

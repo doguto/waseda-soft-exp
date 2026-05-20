@@ -1,7 +1,14 @@
 package src.server.service;
 
-import src.server.core.Broadcaster;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import src.message.DistributeRoleMessage;
 import src.server.core.BroadcastService;
+import src.server.core.Broadcaster;
+import src.server.core.ServiceType;
+import src.server.database.entity.Player;
+import src.server.database.entity.Role;
 import src.server.game.GameMaster;
 
 public class DistributeRoleService extends BaseService implements BroadcastService {
@@ -14,14 +21,23 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
 
     @Override
     public void call() {
-        // RoomRepository.getPlayers(roomId) で全プレイヤーを取得する
-        // 人数に応じたロール構成のリスト を作成する
-        //   4人: WOLF×1, SEER×1, KNIGHT×1, VILLAGER×1
-        //   5人: WOLF×1, SEER×1, KNIGHT×1, CRAZY_VILLAGER×1, VILLAGER×1
-        //   6人: WOLF×1, SEER×1, KNIGHT×1, PLIEST×1, CRAZY_VILLAGER×1, VILLAGER×1
-        // Collections.shuffle() でリストをシャッフルする
-        // PlayerRepository.setRole(roomId, playerName, role) で各プレイヤーにロールを割り当てる
-        // broadcaster でロールを各プレイヤーにユニキャスト通知する
-        // gameMaster.pushService(ServiceType.NIGHT_PHASE_START) をキューに積む
+
+        List<Player> players = roomRepository.getPlayers(roomId);
+        int count = players.size();
+
+        List<Role> roles = new ArrayList<>(List.of(Role.WOLF, Role.SEER, Role.KNIGHT, Role.VILLAGER));
+        if (count >= 5) roles.add(Role.CRAZY_VILLAGER);
+        if (count >= 6) roles.add(Role.MEDIUM);
+
+        Collections.shuffle(roles);
+
+        for (int i = 0; i < players.size(); i++) {
+            String playerName = players.get(i).name;
+            Role role = roles.get(i);
+            gameMaster.playerRepository.setRole(roomId, playerName, role);
+            broadcaster.sendTo(playerName, new DistributeRoleMessage(role.name()));
+        }
+
+        gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
     }
 }
