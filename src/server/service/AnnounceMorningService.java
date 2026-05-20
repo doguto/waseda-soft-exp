@@ -1,21 +1,15 @@
 package src.server.service;
 
+import java.util.Optional;
 import src.message.AnnounceMorningMessage;
-import src.server.core.Broadcaster;
 import src.server.core.BroadcastService;
+import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
-import src.server.database.repository.NightActionRepository;
-import src.server.database.repository.PlayerRepository;
 import src.server.game.GameMaster;
 import src.server.game.GamePhase;
 
-import java.util.Optional;
-
 public class AnnounceMorningService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
-
-    private final NightActionRepository nightActionRepo = new NightActionRepository();
-    private final PlayerRepository playerRepo = new PlayerRepository();
 
     public AnnounceMorningService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
         super(roomId, gameMaster);
@@ -25,10 +19,10 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
     @Override
     public void call() {
         // 1. 人狼の襲撃対象を取得する
-        Optional<String> attackedOpt = nightActionRepo.resolveAttack(roomId);
+        Optional<String> attackedOpt = gameMaster.nightActionRepository.resolveAttack(roomId);
 
         // 2. 騎士の護衛対象を取得する
-        Optional<String> guardedOpt = nightActionRepo.getKnightTarget(roomId);
+        Optional<String> guardedOpt = gameMaster.nightActionRepository.getKnightTarget(roomId);
 
         String deadPlayerName = null;
 
@@ -40,7 +34,7 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
                     && guardedOpt.get().equals(attackedName);
 
             if (!guarded) {
-                playerRepo.kill(roomId, attackedName);
+                gameMaster.playerRepository.kill(roomId, attackedName);
                 deadPlayerName = attackedName;
             }
         }
@@ -55,22 +49,22 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
 
         // 5. 占い結果通知は後で追加
         // TODO:
-        // nightActionRepo.getSeerTarget(roomId) で占い先を取得
-        // PlayerRepository.findByName(roomId, targetName) で役職確認
-        // 占い師本人にだけ broadcaster.sendTo(...) で通知
+        // gameMaster.nightActionRepository.getSeerTarget(roomId) で占い先を取得
+        // gameMaster.playerRepository.findByName(roomId, targetName) で役職確認
+        // 占い師本人にだけ gameMaster.broadcaster.sendTo(...) で通知
 
         // 6. 霊媒師通知は後で追加
         // TODO:
         // 前日に処刑されたプレイヤーの役職を霊媒師にだけ通知
 
         // 7. 勝利判定
-        if (playerRepo.wolvesWin(roomId) || playerRepo.villagersWin(roomId)) {
+        if (gameMaster.playerRepository.wolvesWin(roomId) || gameMaster.playerRepository.villagersWin(roomId)) {
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
             gameMaster.getStateManager().setPhase(GamePhase.DISCUSSION);
         }
 
         // 8. 夜行動をリセットする
-        nightActionRepo.reset(roomId);
+        gameMaster.nightActionRepository.reset(roomId);
     }
 }
