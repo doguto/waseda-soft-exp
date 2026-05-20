@@ -8,6 +8,7 @@ import src.server.core.ServiceType;
 import src.server.core.Worker;
 import src.server.database.entity.Player;
 import src.server.database.entity.Role;
+import src.server.database.repository.ChatRepository;
 import src.server.database.repository.NightActionRepository;
 import src.server.database.repository.PlayerRepository;
 import src.server.database.repository.VoteRepository;
@@ -20,6 +21,7 @@ public class GameMaster {
     public final NightActionRepository nightActionRepository = new NightActionRepository();
     public final PlayerRepository playerRepository = new PlayerRepository();
     public final VoteRepository voteRepository = new VoteRepository();
+    public final ChatRepository chatRepository = new ChatRepository();
 
     public GameMaster(String roomId) {
         this.roomId = roomId;
