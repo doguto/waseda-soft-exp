@@ -6,5 +6,5 @@ public enum Role {
     SEER,
     KNIGHT,
     CRAZY_VILLAGER,
-    PLIEST
+    MEDIUM
 }

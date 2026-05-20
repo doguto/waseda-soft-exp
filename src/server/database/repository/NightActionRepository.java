@@ -68,6 +68,16 @@ public class NightActionRepository {
         return room != null ? Optional.ofNullable(room.knightTarget) : Optional.empty();
     }
 
+    public Optional<String> getLastKnightTarget(String roomId) {
+        RoomData room = db.getRoom(roomId);
+        return room != null ? Optional.ofNullable(room.lastKnightTarget) : Optional.empty();
+    }
+
+    public void updateLastKnightTarget(String roomId) {
+        RoomData room = db.getRoom(roomId);
+        if (room != null) room.lastKnightTarget = room.knightTarget;
+    }
+
     public void reset(String roomId) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.resetNightActions();

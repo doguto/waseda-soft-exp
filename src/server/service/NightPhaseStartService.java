@@ -1,8 +1,10 @@
 package src.server.service;
 
+import src.message.NightPhaseStartMessage;
 import src.server.core.Broadcaster;
 import src.server.core.BroadcastService;
 import src.server.game.GameMaster;
+import src.server.game.GamePhase;
 
 public class NightPhaseStartService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -14,10 +16,10 @@ public class NightPhaseStartService extends BaseService implements BroadcastServ
 
     @Override
     public void call() {
-        // NightActionRepository.reset(roomId) で前回の夜アクションをクリアする
-        // stateManager.incrementNight() で夜カウントを進める
-        // stateManager.resetRoundState() で voteResolved, discussionEnded フラグをリセットする
-        // stateManager.setPhase(GamePhase.NIGHT) でフェーズを夜に設定する
-        // broadcaster.broadcastAlive(roomId, ...) で生存者に夜開始を通知する
+        gameMaster.nightActionRepository.reset(roomId);
+        stateManager.incrementNight();
+        stateManager.resetRoundState();
+        stateManager.setPhase(GamePhase.NIGHT);
+        broadcaster.broadcastAlive(roomId, new NightPhaseStartMessage());
     }
 }

@@ -2,9 +2,15 @@ package src.server.service;
 
 import java.util.Optional;
 import src.message.AnnounceMorningMessage;
+import src.message.MediumResultMessage;
+import src.message.SeerResultMessage;
 import src.server.core.BroadcastService;
 import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
+import src.server.database.GameDatabase;
+import src.server.database.RoomData;
+import src.server.database.entity.Player;
+import src.server.database.entity.Role;
 import src.server.game.GameMaster;
 import src.server.game.GamePhase;
 
@@ -47,15 +53,29 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
 
         broadcaster.broadcastAlive(roomId, announceMsg);
 
-        // 5. 占い結果通知は後で追加
-        // TODO:
-        // gameMaster.nightActionRepository.getSeerTarget(roomId) で占い先を取得
-        // gameMaster.playerRepository.findByName(roomId, targetName) で役職確認
-        // 占い師本人にだけ gameMaster.broadcaster.sendTo(...) で通知
+        // 5. 占い師に占い結果を通知する
+        Optional<String> seerTargetOpt = gameMaster.nightActionRepository.getSeerTarget(roomId);
+        if (seerTargetOpt.isPresent()) {
+            String seerTargetName = seerTargetOpt.get();
+            boolean isWolf = gameMaster.playerRepository.findByName(roomId, seerTargetName)
+                    .map(p -> p.role == Role.WOLF).orElse(false);
+            gameMaster.playerRepository.getAlivePlayers(roomId).stream()
+                    .filter(p -> p.role == Role.SEER)
+                    .findFirst()
+                    .ifPresent(seer -> broadcaster.sendTo(seer.name, new SeerResultMessage(seerTargetName, isWolf)));
+        }
 
-        // 6. 霊媒師通知は後で追加
-        // TODO:
-        // 前日に処刑されたプレイヤーの役職を霊媒師にだけ通知
+        // 6. 霊媒師に前日処刑者の役職を通知する
+        RoomData room = GameDatabase.getInstance().getRoom(roomId);
+        if (room != null && room.executedPlayerName != null) {
+            String executedName = room.executedPlayerName;
+            boolean executedWasWolf = gameMaster.playerRepository.findByName(roomId, executedName)
+                    .map(p -> p.role == Role.WOLF).orElse(false);
+            gameMaster.playerRepository.getAlivePlayers(roomId).stream()
+                    .filter(p -> p.role == Role.MEDIUM)
+                    .findFirst()
+                    .ifPresent(medium -> broadcaster.sendTo(medium.name, new MediumResultMessage(executedName, executedWasWolf)));
+        }
 
         // 7. 勝利判定
         if (gameMaster.playerRepository.wolvesWin(roomId) || gameMaster.playerRepository.villagersWin(roomId)) {
@@ -64,7 +84,8 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
             gameMaster.getStateManager().setPhase(GamePhase.DISCUSSION);
         }
 
-        // 8. 夜行動をリセットする
+        // 8. 夜行動をリセットする（lastKnightTarget を保存してからリセット）
+        gameMaster.nightActionRepository.updateLastKnightTarget(roomId);
         gameMaster.nightActionRepository.reset(roomId);
     }
 }

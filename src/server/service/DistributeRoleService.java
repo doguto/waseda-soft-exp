@@ -27,7 +27,7 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
 
         List<Role> roles = new ArrayList<>(List.of(Role.WOLF, Role.SEER, Role.KNIGHT, Role.VILLAGER));
         if (count >= 5) roles.add(Role.CRAZY_VILLAGER);
-        if (count >= 6) roles.add(Role.PLIEST);
+        if (count >= 6) roles.add(Role.MEDIUM);
 
         Collections.shuffle(roles);
 

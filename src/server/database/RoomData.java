@@ -12,8 +12,9 @@ public class RoomData {
     public final List<Player>        players      = new CopyOnWriteArrayList<>();
     public final Map<String, String> votes        = new ConcurrentHashMap<>(); // playerName -> targetName
     public final Map<String, String> wolfAttacks  = new ConcurrentHashMap<>(); // wolfName -> targetName
-    public volatile String           knightTarget = null;
-    public volatile String           seerTarget   = null;
+    public volatile String           knightTarget     = null;
+    public volatile String           lastKnightTarget = null;
+    public volatile String           seerTarget       = null;
     public volatile String           executedPlayerName = null;
 
     public final List<ChatMessage> villageChat = new CopyOnWriteArrayList<>();
