@@ -34,7 +34,7 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
         for (int i = 0; i < players.size(); i++) {
             String playerName = players.get(i).name;
             Role role = roles.get(i);
-            gameMaster.playerRepository.setRole(roomId, playerName, role);
+            gameMaster.playerRepository.setRole(playerName, role);
             broadcaster.sendTo(playerName, new DistributeRoleMessage(role.name()));
         }
 

@@ -10,7 +10,6 @@ import src.server.database.repository.PlayerRepository;
 public class ClientRegistry {
     private final Map<String, PrintWriter> clients     = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> roomPlayers = new ConcurrentHashMap<>();
-    private final PlayerRepository playerRepo = new PlayerRepository();
 
     public void register(String playerName, PrintWriter writer) {
         clients.put(playerName, writer);
@@ -36,19 +35,20 @@ public class ClientRegistry {
     }
 
     public void broadcastAlive(String roomId, String json) {
-        playerRepo.getAlivePlayers(roomId).forEach(p -> sendTo(p.name, json));
+        new PlayerRepository(roomId).getAlivePlayers().forEach(p -> sendTo(p.name, json));
     }
 
     public void broadcastToRole(String roomId, Role role, String json) {
-        playerRepo.getAlivePlayers(roomId).stream()
+        new PlayerRepository(roomId).getAlivePlayers().stream()
             .filter(p -> p.role == role)
             .forEach(p -> sendTo(p.name, json));
     }
 
     public void broadcastDead(String roomId, String json) {
         Set<String> all = roomPlayers.getOrDefault(roomId, Set.of());
+        PlayerRepository repo = new PlayerRepository(roomId);
         all.stream()
-            .filter(name -> playerRepo.findByName(roomId, name).map(p -> !p.alive).orElse(false))
+            .filter(name -> repo.findByName(name).map(p -> !p.alive).orElse(false))
             .forEach(name -> sendTo(name, json));
     }
 }

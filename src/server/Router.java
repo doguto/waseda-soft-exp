@@ -9,6 +9,7 @@ import src.server.game.GameMaster;
 import src.server.service.*;
 
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 
 public class Router {
@@ -100,7 +101,7 @@ public class Router {
                     StartGameMessage msg = mapper.readValue(json, StartGameMessage.class);
                     System.out.println("[INFO] StartGame: roomId=" + msg.roomId);
                     GameMaster gm = gameMasters.get(msg.roomId);
-                    if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しません"));
+                    if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しません", List.of()));
                     yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, broadcaster).call(msg));
                 } catch (Exception e) {
                     System.out.println("[ERROR] StartGameService failed: " + e.getMessage());

@@ -1,36 +1,37 @@
 package src.server.database.repository;
 
-import src.server.database.GameDatabase;
-import src.server.database.RoomData;
-import src.server.database.entity.Role;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+import src.server.database.GameDatabase;
+import src.server.database.RoomData;
+import src.server.database.entity.Role;
 
 public class NightActionRepository {
     private final GameDatabase db = GameDatabase.getInstance();
-    private final PlayerRepository playerRepository = new PlayerRepository();
+    private final String roomId;
 
-    // 人狼の投票
-    public void saveWolfAttack(String roomId, String wolfName, String targetName) {
+    public NightActionRepository(String roomId) {
+        this.roomId = roomId;
+    }
+
+    public void saveWolfAttack(String wolfName, String targetName) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.wolfAttacks.put(wolfName, targetName);
     }
 
-    public boolean allWolvesAttacked(String roomId) {
+    public boolean allWolvesAttacked() {
         RoomData room = db.getRoom(roomId);
         if (room == null) return false;
-        long aliveWolves = playerRepository.getAlivePlayers(roomId).stream()
+        long aliveWolves = new PlayerRepository(roomId).getAlivePlayers().stream()
             .filter(p -> p.role == Role.WOLF).count();
         return room.wolfAttacks.size() >= aliveWolves;
     }
 
-    // 最多票の襲撃対象を返す。同票の場合はランダムで決定する。
-    public Optional<String> resolveAttack(String roomId) {
+    public Optional<String> resolveAttack() {
         RoomData room = db.getRoom(roomId);
         if (room == null || room.wolfAttacks.isEmpty()) return Optional.empty();
 
@@ -46,39 +47,37 @@ public class NightActionRepository {
         return Optional.of(top.get(new Random().nextInt(top.size())));
     }
 
-    // 占い師
-    public void saveSeerTarget(String roomId, String targetName) {
+    public void saveSeerTarget(String targetName) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.seerTarget = targetName;
     }
 
-    public Optional<String> getSeerTarget(String roomId) {
+    public Optional<String> getSeerTarget() {
         RoomData room = db.getRoom(roomId);
         return room != null ? Optional.ofNullable(room.seerTarget) : Optional.empty();
     }
 
-    // 騎士
-    public void saveKnightTarget(String roomId, String targetName) {
+    public void saveKnightTarget(String targetName) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.knightTarget = targetName;
     }
 
-    public Optional<String> getKnightTarget(String roomId) {
+    public Optional<String> getKnightTarget() {
         RoomData room = db.getRoom(roomId);
         return room != null ? Optional.ofNullable(room.knightTarget) : Optional.empty();
     }
 
-    public Optional<String> getLastKnightTarget(String roomId) {
+    public Optional<String> getLastKnightTarget() {
         RoomData room = db.getRoom(roomId);
         return room != null ? Optional.ofNullable(room.lastKnightTarget) : Optional.empty();
     }
 
-    public void updateLastKnightTarget(String roomId) {
+    public void updateLastKnightTarget() {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.lastKnightTarget = room.knightTarget;
     }
 
-    public void reset(String roomId) {
+    public void reset() {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.resetNightActions();
     }

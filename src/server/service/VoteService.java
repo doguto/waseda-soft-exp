@@ -12,7 +12,7 @@ public class VoteService extends BaseService {
 
     public VoteResultMessage call(VoteMessage msg) {
         // VoteRepository.save(roomId, msg.playerName, msg.targetName) で投票を保存する
-        gameMaster.voteRepository.save(roomId, msg.playerName, msg.targetName);
+        gameMaster.voteRepository.save(msg.playerName, msg.targetName);
         // stateManager.check(GameEvent.VOTE_SUBMITTED) を呼ぶ
         stateManager.check(GameEvent.VOTE_SUBMITTED);
         //   → 全生存者が投票済みなら GameStateManager が DISTRIBUTE_VOTE_RESULT をキューに積む

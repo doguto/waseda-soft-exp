@@ -19,7 +19,7 @@ public class AnnounceGameOverService extends BaseService implements BroadcastSer
     @Override
     public void call() {
         // PlayerRepository.wolvesWin(roomId) / villagersWin(roomId) で勝利陣営 (WOLF / VILLAGER) を判定する
-        String winner = gameMaster.playerRepository.villagersWin(roomId) ? "VILLAGER" : "WOLF";
+        String winner = gameMaster.playerRepository.villagersWin() ? "VILLAGER" : "WOLF";
 
         // RoomData.players から全プレイヤーの名前とロールを取得する
         RoomData room = GameDatabase.getInstance().getRoom(roomId);
