@@ -17,7 +17,7 @@ public class StartGameService extends BaseService {
     public StartGameResultMessage call(StartGameMessage msg) {
         // RoomRepository.canStart(roomId) で 4 人以上いるか確認する (不足時は失敗を返す)
         if (!roomRepository.canStart(roomId)) {
-            return new StartGameResultMessage(false, "プレイヤーが不足しています");
+            return new StartGameResultMessage(false, "プレイヤーが不足しています", java.util.Collections.emptyList());
         }
         // gameMaster.startWorker(broadcaster) でサービスキューのワーカースレッドを起動する
         gameMaster.startWorker(broadcaster);
@@ -26,6 +26,6 @@ public class StartGameService extends BaseService {
         gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE);
 
         // 成功/失敗を StartGameResultMessage に設定して返す
-        return new StartGameResultMessage(true, "ゲームを開始しました");
+        return new StartGameResultMessage(true, "ゲームを開始しました", gameMaster.playerRepository.getPlayerNames());
     }
 }

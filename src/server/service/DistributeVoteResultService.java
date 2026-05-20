@@ -18,7 +18,7 @@ public class DistributeVoteResultService extends BaseService implements Broadcas
     @Override
     public void call() {
         // VoteRepository.resolveTarget(roomId) で最多票プレイヤー (同票ならランダム) と集計結果を取得する
-        VoteResolution resolution = gameMaster.voteRepository.resolveTarget(roomId);
+        VoteResolution resolution = gameMaster.voteRepository.resolveTarget();
         String targetName = resolution.target().orElse(null);
 
         // 各プレイヤーの得票数をまとめた結果をルーム全体へ通知する

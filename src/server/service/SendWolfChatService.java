@@ -17,7 +17,7 @@ public class SendWolfChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendWolfChatMessage msg) {
-        gameMaster.chatRepository.addWolfMessage(msg.roomId, new ChatMessage(msg.senderName, msg.text));
+        gameMaster.chatRepository.addWolfMessage(new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcastToRole(msg.roomId, Role.WOLF,
             new ChatBroadcastMessage("WOLF", msg.senderName, msg.text));
         return new SendChatResultMessage(true);

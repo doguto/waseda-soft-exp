@@ -16,12 +16,12 @@ public class KnightGuardService extends BaseService {
             return new KnightGuardResultMessage(false);
         }
         // 連続護衛禁止
-        if (gameMaster.nightActionRepository.getLastKnightTarget(roomId)
+        if (gameMaster.nightActionRepository.getLastKnightTarget()
                 .map(last -> last.equals(msg.targetName)).orElse(false)) {
             return new KnightGuardResultMessage(false);
         }
 
-        gameMaster.nightActionRepository.saveKnightTarget(roomId, msg.targetName);
+        gameMaster.nightActionRepository.saveKnightTarget(msg.targetName);
         gameMaster.getStateManager().check(GameEvent.NIGHT_ACTION_SUBMITTED);
         return new KnightGuardResultMessage(true);
     }

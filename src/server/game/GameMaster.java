@@ -18,13 +18,17 @@ public class GameMaster {
     private final BlockingQueue<ServiceType> queue = new LinkedBlockingQueue<>();
     private final GameStateManager stateManager;
 
-    public final NightActionRepository nightActionRepository = new NightActionRepository();
-    public final PlayerRepository playerRepository = new PlayerRepository();
-    public final VoteRepository voteRepository = new VoteRepository();
-    public final ChatRepository chatRepository = new ChatRepository();
+    public final NightActionRepository nightActionRepository;
+    public final PlayerRepository playerRepository;
+    public final VoteRepository voteRepository;
+    public final ChatRepository chatRepository;
 
     public GameMaster(String roomId) {
         this.roomId = roomId;
+        this.nightActionRepository = new NightActionRepository(roomId);
+        this.playerRepository = new PlayerRepository(roomId);
+        this.voteRepository = new VoteRepository(roomId);
+        this.chatRepository = new ChatRepository(roomId);
         this.stateManager = new GameStateManager(this);
     }
 
@@ -42,21 +46,21 @@ public class GameMaster {
 
     public boolean allNightActionsComplete() {
         if (stateManager.isFirstNight()) {
-            return nightActionRepository.getSeerTarget(roomId).isPresent();
+            return nightActionRepository.getSeerTarget().isPresent();
         }
-        List<Player> alive = playerRepository.getAlivePlayers(roomId);
+        List<Player> alive = playerRepository.getAlivePlayers();
         boolean hasWolf   = alive.stream().anyMatch(p -> p.role == Role.WOLF);
         boolean hasSeer   = alive.stream().anyMatch(p -> p.role == Role.SEER);
         boolean hasKnight = alive.stream().anyMatch(p -> p.role == Role.KNIGHT);
 
-        if (hasWolf   && !nightActionRepository.allWolvesAttacked(roomId))      return false;
-        if (hasSeer   && nightActionRepository.getSeerTarget(roomId).isEmpty())  return false;
-        if (hasKnight && nightActionRepository.getKnightTarget(roomId).isEmpty())return false;
+        if (hasWolf   && !nightActionRepository.allWolvesAttacked())      return false;
+        if (hasSeer   && nightActionRepository.getSeerTarget().isEmpty())  return false;
+        if (hasKnight && nightActionRepository.getKnightTarget().isEmpty())return false;
         return true;
     }
 
     public boolean allVoted() {
-        return voteRepository.allVoted(roomId);
+        return voteRepository.allVoted();
     }
 
     // ── getters ──────────────────────────────────────────────────────────────

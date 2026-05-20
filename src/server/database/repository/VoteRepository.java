@@ -12,24 +12,27 @@ import java.util.stream.Collectors;
 
 public class VoteRepository {
     private final GameDatabase db = GameDatabase.getInstance();
-    private final PlayerRepository playerRepository = new PlayerRepository();
+    private final String roomId;
 
     public record VoteResolution(Optional<String> target, Map<String, Integer> counts) {}
 
-    public void save(String roomId, String playerName, String targetName) {
+    public VoteRepository(String roomId) {
+        this.roomId = roomId;
+    }
+
+    public void save(String playerName, String targetName) {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.votes.put(playerName, targetName);
     }
 
-    public boolean allVoted(String roomId) {
+    public boolean allVoted() {
         RoomData room = db.getRoom(roomId);
         if (room == null) return false;
-        long alivePlayers = playerRepository.getAlivePlayers(roomId).size();
+        long alivePlayers = new PlayerRepository(roomId).getAlivePlayers().size();
         return room.votes.size() >= alivePlayers;
     }
 
-    // 最多票のプレイヤーと得票数を返す。同票の場合はランダムで決定する。
-    public VoteResolution resolveTarget(String roomId) {
+    public VoteResolution resolveTarget() {
         RoomData room = db.getRoom(roomId);
         if (room == null || room.votes.isEmpty()) {
             return new VoteResolution(Optional.empty(), Map.of());
@@ -48,7 +51,7 @@ public class VoteRepository {
         return new VoteResolution(target, counts);
     }
 
-    public void reset(String roomId) {
+    public void reset() {
         RoomData room = db.getRoom(roomId);
         if (room != null) room.resetVotes();
     }

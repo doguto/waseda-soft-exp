@@ -9,7 +9,6 @@ import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
-import src.server.database.entity.Player;
 import src.server.database.entity.Role;
 import src.server.game.GameMaster;
 import src.server.game.GamePhase;
@@ -25,10 +24,10 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
     @Override
     public void call() {
         // 1. 人狼の襲撃対象を取得する
-        Optional<String> attackedOpt = gameMaster.nightActionRepository.resolveAttack(roomId);
+        Optional<String> attackedOpt = gameMaster.nightActionRepository.resolveAttack();
 
         // 2. 騎士の護衛対象を取得する
-        Optional<String> guardedOpt = gameMaster.nightActionRepository.getKnightTarget(roomId);
+        Optional<String> guardedOpt = gameMaster.nightActionRepository.getKnightTarget();
 
         String deadPlayerName = null;
 
@@ -40,7 +39,7 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
                     && guardedOpt.get().equals(attackedName);
 
             if (!guarded) {
-                gameMaster.playerRepository.kill(roomId, attackedName);
+                gameMaster.playerRepository.kill(attackedName);
                 deadPlayerName = attackedName;
             }
         }
@@ -54,12 +53,12 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         broadcaster.broadcastAlive(roomId, announceMsg);
 
         // 5. 占い師に占い結果を通知する
-        Optional<String> seerTargetOpt = gameMaster.nightActionRepository.getSeerTarget(roomId);
+        Optional<String> seerTargetOpt = gameMaster.nightActionRepository.getSeerTarget();
         if (seerTargetOpt.isPresent()) {
             String seerTargetName = seerTargetOpt.get();
-            boolean isWolf = gameMaster.playerRepository.findByName(roomId, seerTargetName)
+            boolean isWolf = gameMaster.playerRepository.findByName(seerTargetName)
                     .map(p -> p.role == Role.WOLF).orElse(false);
-            gameMaster.playerRepository.getAlivePlayers(roomId).stream()
+            gameMaster.playerRepository.getAlivePlayers().stream()
                     .filter(p -> p.role == Role.SEER)
                     .findFirst()
                     .ifPresent(seer -> broadcaster.sendTo(seer.name, new SeerResultMessage(seerTargetName, isWolf)));
@@ -69,23 +68,23 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         RoomData room = GameDatabase.getInstance().getRoom(roomId);
         if (room != null && room.executedPlayerName != null) {
             String executedName = room.executedPlayerName;
-            boolean executedWasWolf = gameMaster.playerRepository.findByName(roomId, executedName)
+            boolean executedWasWolf = gameMaster.playerRepository.findByName(executedName)
                     .map(p -> p.role == Role.WOLF).orElse(false);
-            gameMaster.playerRepository.getAlivePlayers(roomId).stream()
+            gameMaster.playerRepository.getAlivePlayers().stream()
                     .filter(p -> p.role == Role.MEDIUM)
                     .findFirst()
                     .ifPresent(medium -> broadcaster.sendTo(medium.name, new MediumResultMessage(executedName, executedWasWolf)));
         }
 
         // 7. 勝利判定
-        if (gameMaster.playerRepository.wolvesWin(roomId) || gameMaster.playerRepository.villagersWin(roomId)) {
+        if (gameMaster.playerRepository.wolvesWin() || gameMaster.playerRepository.villagersWin()) {
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
             gameMaster.getStateManager().setPhase(GamePhase.DISCUSSION);
         }
 
         // 8. 夜行動をリセットする（lastKnightTarget を保存してからリセット）
-        gameMaster.nightActionRepository.updateLastKnightTarget(roomId);
-        gameMaster.nightActionRepository.reset(roomId);
+        gameMaster.nightActionRepository.updateLastKnightTarget();
+        gameMaster.nightActionRepository.reset();
     }
 }
