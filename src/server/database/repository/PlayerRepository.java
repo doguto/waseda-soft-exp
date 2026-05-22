@@ -5,7 +5,7 @@ import java.util.Optional;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
 import src.server.database.entity.Player;
-import src.server.database.entity.Role;
+import src.common.Role;
 
 public class PlayerRepository {
     private final GameDatabase db = GameDatabase.getInstance();
@@ -52,5 +52,13 @@ public class PlayerRepository {
         RoomData room = db.getRoom(roomId);
         if (room == null) return List.of();
         return room.players.stream().map(p -> p.name).toList();
+    }
+
+    public Role getPlayerRole(String name) {
+        return findByName(name).map(p -> p.role).orElse(null);
+    }
+
+    public boolean isAlive(String name) {
+        return findByName(name).map(p -> p.alive).orElse(false);
     }
 }

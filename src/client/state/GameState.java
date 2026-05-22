@@ -1,22 +1,21 @@
 package src.client.state;
 
-import src.client.network.ServerConnection;
-
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import src.common.GamePhase;
+import src.common.Role;
 
 public class GameState {
     public String myName = "";
-    public String myRole = "";
+    public Role   myRole = null;
     public String roomId = "";
     public GamePhase phase = GamePhase.LOBBY;
     public List<String> players = new ArrayList<>();
     public List<String> chatLog = new ArrayList<>();
+    public List<String> wolfChatLog = new ArrayList<>();
+    public List<String> graveChatLog = new ArrayList<>();
     public boolean isAlive = true;
-
-    // ネットワーク層への参照（ActionPanel/ChatPanelからの送信に使う）
-    public ServerConnection connection;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.database.repository.PlayerRepository;
 
 public class ClientRegistry {

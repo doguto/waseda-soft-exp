@@ -9,9 +9,9 @@ import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.game.GameMaster;
-import src.server.game.GamePhase;
+import src.common.GamePhase;
 
 public class AnnounceMorningService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -80,7 +80,7 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         if (gameMaster.playerRepository.wolvesWin() || gameMaster.playerRepository.villagersWin()) {
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
-            gameMaster.getStateManager().setPhase(GamePhase.DISCUSSION);
+            gameMaster.getStateManager().setPhase(GamePhase.DAY_DISCUSSION);
         }
 
         // 8. 夜行動をリセットする（lastKnightTarget を保存してからリセット）

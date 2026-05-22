@@ -3,7 +3,7 @@ package src.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import src.server.core.Broadcaster;
 import src.server.core.ClientRegistry;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.game.GameMaster;
 
 import java.io.*;

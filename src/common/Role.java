@@ -1,4 +1,4 @@
-package src.server.database.entity;
+package src.common;
 
 public enum Role {
     WOLF,

@@ -5,6 +5,6 @@ public interface Broadcaster {
     void broadcast(String roomId, Object message);
     void sendTo(String playerName, Object message);
     void broadcastAlive(String roomId, Object message);
-    void broadcastToRole(String roomId, src.server.database.entity.Role role, Object message);
+    void broadcastToRole(String roomId, src.common.Role role, Object message);
     void broadcastDead(String roomId, Object message);
 }

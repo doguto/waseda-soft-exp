@@ -8,7 +8,7 @@ import src.server.core.BroadcastService;
 import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.database.entity.Player;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.game.GameMaster;
 
 public class DistributeRoleService extends BaseService implements BroadcastService {

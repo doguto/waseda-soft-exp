@@ -1,28 +1,28 @@
-package src.client.ui;
+package src.client.view;
 
-import src.client.state.GamePhase;
+import java.awt.*;
+import javax.swing.*;
+import src.client.presenter.ChatPresenter;
+import src.client.presenter.NightActionPresenter;
+import src.client.presenter.NoonActionPresenter;
+import src.client.presenter.RoomPresenter;
+import src.common.GamePhase;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 
-import javax.swing.*;
-import java.awt.*;
-
 public class MainFrame extends JFrame implements GameStateListener {
-    private final GameState state = new GameState();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
 
-    public MainFrame() {
+    public MainFrame(GameState state, RoomPresenter room, NoonActionPresenter noon,
+                     NightActionPresenter night, ChatPresenter chat) {
         super("人狼ゲーム");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(860, 560);
         setLocationRelativeTo(null);
 
-        LobbyPanel lobbyPanel = new LobbyPanel(state);
-        GamePanel  gamePanel  = new GamePanel(state);
-
-        cards.add(lobbyPanel, "LOBBY");
-        cards.add(gamePanel,  "GAME");
+        cards.add(new LobbyPanel(state, room),                   "LOBBY");
+        cards.add(new GamePanel(state, room, noon, night, chat), "GAME");
         add(cards);
 
         state.addListener(this);

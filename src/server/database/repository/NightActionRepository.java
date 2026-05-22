@@ -8,7 +8,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
-import src.server.database.entity.Role;
+import src.common.Role;
 
 public class NightActionRepository {
     private final GameDatabase db = GameDatabase.getInstance();
