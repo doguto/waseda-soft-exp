@@ -8,6 +8,8 @@ import src.client.state.GamePhase;
 import src.client.state.GameState;
 import src.message.*;
 
+import java.util.concurrent.CompletableFuture;
+
 public class RoomPresenter {
     private final GameState state;
     private final GameSession session;
@@ -22,66 +24,63 @@ public class RoomPresenter {
         this.dispatcher = dispatcher;
     }
 
-    public void connect(String host, String name, String room, boolean isCreate) {
+    /** 接続してルーム作成/参加リクエストを送信。応答の success/failure を Boolean Future で返す。 */
+    public CompletableFuture<Boolean> connect(String host, String name, String room, boolean isCreate) {
         try {
             session.setConnection(new ServerConnection(host, 8080));
             state.myName = name;
             state.roomId = room;
             new MessageReceiver(session.getConnection(), dispatcher).start();
+
             Object msg;
+            String responseType;
             if (isCreate) {
                 CreateRoomMessage m = new CreateRoomMessage();
-                m.roomId = room;
-                m.name = name;
+                m.roomId = room; m.name = name;
                 msg = m;
+                responseType = CreateRoomResultMessage.MessageType;
             } else {
                 JoinRoomMessage m = new JoinRoomMessage();
-                m.roomId = room;
-                m.name = name;
+                m.roomId = room; m.name = name;
                 msg = m;
+                responseType = JoinRoomResultMessage.MessageType;
             }
-            session.send(msg);
+
+            return session.sendRequest(msg, responseType)
+                .thenApply(node -> {
+                    if (node.get("success").asBoolean()) {
+                        state.players.add(state.myName);
+                        state.phase = GamePhase.WAITING;
+                        log("[システム] ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
+                    } else {
+                        log("[エラー] " + node.get("message").asText());
+                    }
+                    state.notifyListeners();
+                    return node.get("success").asBoolean();
+                });
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
+            CompletableFuture<Boolean> failed = new CompletableFuture<>();
+            failed.completeExceptionally(e);
+            return failed;
         }
     }
 
-    public void requestStartGame() {
+    /** ゲーム開始リクエストを送信。応答の success/failure を Boolean Future で返す。 */
+    public CompletableFuture<Boolean> requestStartGame() {
         StartGameMessage m = new StartGameMessage();
         m.roomId = state.roomId;
-        send(m);
+        return session.sendRequest(m, StartGameResultMessage.MessageType)
+            .thenApply(node -> {
+                boolean ok = node.get("success").asBoolean();
+                if (!ok) {
+                    log("[エラー] ゲーム開始失敗: " + node.get("message").asText());
+                    state.notifyListeners();
+                }
+                return ok;
+            });
     }
 
-    // --- サーバーメッセージハンドラ ---
-
-    public void onCreateRoomResult(JsonNode node) {
-        if (node.get("success").asBoolean()) {
-            state.players.add(state.myName);
-            state.phase = GamePhase.WAITING;
-            log("[システム] ルームを作成しました: " + state.roomId);
-        } else {
-            log("[エラー] " + node.get("message").asText());
-        }
-        state.notifyListeners();
-    }
-
-    public void onJoinRoomResult(JsonNode node) {
-        if (node.get("success").asBoolean()) {
-            state.players.add(state.myName);
-            state.phase = GamePhase.WAITING;
-            log("[システム] ルームに参加しました: " + state.roomId);
-        } else {
-            log("[エラー] " + node.get("message").asText());
-        }
-        state.notifyListeners();
-    }
-
-    public void onStartGameResult(JsonNode node) {
-        if (!node.get("success").asBoolean()) {
-            log("[エラー] ゲーム開始失敗: " + node.get("message").asText());
-            state.notifyListeners();
-        }
-    }
+    // --- サーバーからの自発的なブロードキャストハンドラ ---
 
     public void onDistributeRole(JsonNode node) {
         state.myRole = node.get("role").asText();

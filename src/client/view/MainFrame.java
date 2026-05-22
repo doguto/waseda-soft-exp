@@ -1,5 +1,7 @@
 package src.client.view;
 
+import java.awt.*;
+import javax.swing.*;
 import src.client.presenter.ChatPresenter;
 import src.client.presenter.NightActionPresenter;
 import src.client.presenter.NoonActionPresenter;
@@ -7,9 +9,6 @@ import src.client.presenter.RoomPresenter;
 import src.client.state.GamePhase;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
-
-import javax.swing.*;
-import java.awt.*;
 
 public class MainFrame extends JFrame implements GameStateListener {
     private final CardLayout cardLayout = new CardLayout();

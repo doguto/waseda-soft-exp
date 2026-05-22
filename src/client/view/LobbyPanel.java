@@ -1,10 +1,9 @@
 package src.client.view;
 
+import java.awt.*;
+import javax.swing.*;
 import src.client.presenter.RoomPresenter;
 import src.client.state.GameState;
-
-import javax.swing.*;
-import java.awt.*;
 
 public class LobbyPanel extends JPanel {
     private final RoomPresenter roomPresenter;
@@ -61,11 +60,12 @@ public class LobbyPanel extends JPanel {
             return;
         }
 
-        try {
-            roomPresenter.connect(host, name, room, isCreate);
-            statusLabel.setText("接続中...");
-        } catch (Exception ex) {
-            statusLabel.setText("接続失敗: " + ex.getMessage());
-        }
+        statusLabel.setText("接続中...");
+        roomPresenter.connect(host, name, room, isCreate)
+            .exceptionally(ex -> {
+                SwingUtilities.invokeLater(() ->
+                    statusLabel.setText("接続失敗: " + ex.getCause().getMessage()));
+                return false;
+            });
     }
 }

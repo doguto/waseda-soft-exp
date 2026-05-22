@@ -20,6 +20,7 @@ public class GUIClient {
 
             MessageDispatcher dispatcher = new MessageDispatcher(room, noon, night, chat);
             room.setDispatcher(dispatcher);
+            session.setDispatcher(dispatcher);  // sendRequest() 用
 
             new MainFrame(state, room, noon, night, chat);
         });
