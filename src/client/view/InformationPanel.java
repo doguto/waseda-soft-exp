@@ -1,19 +1,18 @@
 package src.client.view;
 
+import java.awt.*;
+import javax.swing.*;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 
-import javax.swing.*;
-import java.awt.*;
-
-public class PlayerListPanel extends JPanel implements GameStateListener {
+public class InformationPanel extends JPanel implements GameStateListener {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final JList<String> playerList = new JList<>(listModel);
     private final JLabel phaseLabel = new JLabel("-");
     private final JLabel nameLabel  = new JLabel("名前: -");
     private final JLabel roleLabel  = new JLabel("役職: -");
 
-    public PlayerListPanel(GameState state) {
+    public InformationPanel(GameState state) {
         setLayout(new BorderLayout(0, 4));
         setPreferredSize(new Dimension(160, 0));
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));

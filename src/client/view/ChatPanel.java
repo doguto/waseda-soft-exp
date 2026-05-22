@@ -4,6 +4,7 @@ import java.awt.*;
 import java.util.List;
 import javax.swing.*;
 import src.client.presenter.ChatPresenter;
+import src.client.state.GamePhase;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 
@@ -49,9 +50,9 @@ public class ChatPanel extends JPanel implements GameStateListener {
         inputRow.add(sendButton, BorderLayout.EAST);
         add(inputRow, BorderLayout.SOUTH);
 
-        villageTabBtn.addActionListener(e -> refreshLog(currentState));
-        wolfTabBtn.addActionListener(e -> refreshLog(currentState));
-        graveTabBtn.addActionListener(e -> refreshLog(currentState));
+        villageTabBtn.addActionListener(e -> { refreshLog(currentState); updateSendable(); });
+        wolfTabBtn.addActionListener(e -> { refreshLog(currentState); updateSendable(); });
+        graveTabBtn.addActionListener(e -> { refreshLog(currentState); updateSendable(); });
         sendButton.addActionListener(e -> sendChat());
         inputField.addActionListener(e -> sendChat());
     }
@@ -83,9 +84,39 @@ public class ChatPanel extends JPanel implements GameStateListener {
         logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 
+    private void updateSendable() {
+        boolean isWolf = currentState != null && "WOLF".equals(currentState.myRole);
+        boolean isDead = currentState != null && !currentState.isAlive;
+
+        // タブ自体の有効/無効を更新
+        wolfTabBtn.setEnabled(isWolf);
+        graveTabBtn.setEnabled(isDead);
+
+        // 無効になったタブが選択中なら全体タブへ切り替え
+        if ((wolfTabBtn.isSelected() && !isWolf)
+                || (graveTabBtn.isSelected() && !isDead)) {
+            villageTabBtn.setSelected(true);
+            refreshLog(currentState);
+        }
+
+        // 全体タブは DAY_DISCUSSION / WAITING のみ送信可
+        boolean canSend;
+        if (villageTabBtn.isSelected()) {
+            canSend = currentState == null
+                    || currentState.phase == GamePhase.DAY_DISCUSSION
+                    || currentState.phase == GamePhase.WAITING;
+        } else {
+            // 人狼・墓地タブはタブが有効な場合のみここに来るので常に送信可
+            canSend = true;
+        }
+        inputField.setEnabled(canSend);
+        sendButton.setEnabled(canSend);
+    }
+
     @Override
     public void onStateChanged(GameState state) {
         this.currentState = state;
         refreshLog(state);
+        updateSendable();
     }
 }

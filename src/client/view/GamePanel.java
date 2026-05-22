@@ -1,5 +1,7 @@
 package src.client.view;
 
+import java.awt.*;
+import javax.swing.*;
 import src.client.presenter.ChatPresenter;
 import src.client.presenter.NightActionPresenter;
 import src.client.presenter.NoonActionPresenter;
@@ -7,12 +9,9 @@ import src.client.presenter.RoomPresenter;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 
-import javax.swing.*;
-import java.awt.*;
-
 public class GamePanel extends JPanel implements GameStateListener {
     private final ChatPanel chatPanel;
-    private final PlayerListPanel playerListPanel;
+    private final InformationPanel playerListPanel;
     private final ActionPanel actionPanel;
 
     public GamePanel(GameState state, RoomPresenter room, NoonActionPresenter noon,
@@ -20,7 +19,7 @@ public class GamePanel extends JPanel implements GameStateListener {
         setLayout(new BorderLayout());
 
         chatPanel       = new ChatPanel(state, chat);
-        playerListPanel = new PlayerListPanel(state);
+        playerListPanel = new InformationPanel(state);
         actionPanel     = new ActionPanel(state, room, noon, night);
 
         add(chatPanel,       BorderLayout.CENTER);
