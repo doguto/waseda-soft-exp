@@ -1,12 +1,11 @@
 package src.client.view;
 
+import java.awt.*;
+import java.util.List;
+import javax.swing.*;
 import src.client.presenter.ChatPresenter;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
 
 public class ChatPanel extends JPanel implements GameStateListener {
     private final ChatPresenter chatPresenter;
@@ -60,7 +59,13 @@ public class ChatPanel extends JPanel implements GameStateListener {
     private void sendChat() {
         String text = inputField.getText().trim();
         if (text.isEmpty()) return;
-        chatPresenter.sendChat(text);
+        if (wolfTabBtn.isSelected()) {
+            chatPresenter.sendWolfChat(text);
+        } else if (graveTabBtn.isSelected()) {
+            chatPresenter.sendGloveChat(text);
+        } else {
+            chatPresenter.sendGeneralChat(text);
+        }
         inputField.setText("");
     }
 

@@ -53,4 +53,12 @@ public class PlayerRepository {
         if (room == null) return List.of();
         return room.players.stream().map(p -> p.name).toList();
     }
+
+    public Role getPlayerRole(String name) {
+        return findByName(name).map(p -> p.role).orElse(null);
+    }
+
+    public boolean isAlive(String name) {
+        return findByName(name).map(p -> p.alive).orElse(false);
+    }
 }

@@ -17,6 +17,10 @@ public class SendWolfChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendWolfChatMessage msg) {
+        if (gameMaster.playerRepository.getPlayerRole(msg.senderName) != Role.WOLF) {
+            return new SendChatResultMessage(false);
+        }
+
         gameMaster.chatRepository.addWolfMessage(new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcastToRole(msg.roomId, Role.WOLF,
             new ChatBroadcastMessage("WOLF", msg.senderName, msg.text));

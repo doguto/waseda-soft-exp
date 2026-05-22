@@ -16,6 +16,10 @@ public class SendGraveChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendGraveChatMessage msg) {
+        if (gameMaster.playerRepository.isAlive(msg.senderName)) {
+            return new SendChatResultMessage(false);
+        }
+        
         gameMaster.chatRepository.addGraveMessage(new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcastDead(msg.roomId, new ChatBroadcastMessage("GRAVE", msg.senderName, msg.text));
         return new SendChatResultMessage(true);
