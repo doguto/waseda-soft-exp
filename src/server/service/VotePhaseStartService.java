@@ -4,7 +4,7 @@ import src.message.VotePhaseStartMessage;
 import src.server.core.BroadcastService;
 import src.server.core.Broadcaster;
 import src.server.game.GameMaster;
-import src.server.game.GamePhase;
+import src.common.GamePhase;
 
 public class VotePhaseStartService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -19,7 +19,7 @@ public class VotePhaseStartService extends BaseService implements BroadcastServi
         // VoteRepository.reset(roomId) で前回の投票結果をクリアする
         gameMaster.voteRepository.reset();
         // stateManager.setPhase(GamePhase.VOTE) でフェーズを投票に設定する
-        stateManager.setPhase(GamePhase.VOTE);
+        stateManager.setPhase(GamePhase.DAY_VOTE);
         // broadcaster.broadcastAlive(roomId, ...) で生存者に投票開始を通知する
         broadcaster.broadcastAlive(roomId, new VotePhaseStartMessage());
     }

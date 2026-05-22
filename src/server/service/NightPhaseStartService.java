@@ -4,7 +4,7 @@ import src.message.NightPhaseStartMessage;
 import src.server.core.Broadcaster;
 import src.server.core.BroadcastService;
 import src.server.game.GameMaster;
-import src.server.game.GamePhase;
+import src.common.GamePhase;
 
 public class NightPhaseStartService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;

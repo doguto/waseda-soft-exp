@@ -7,7 +7,7 @@ import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.core.Worker;
 import src.server.database.entity.Player;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.database.repository.ChatRepository;
 import src.server.database.repository.NightActionRepository;
 import src.server.database.repository.PlayerRepository;

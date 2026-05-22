@@ -5,7 +5,7 @@ import java.util.Optional;
 import src.server.database.GameDatabase;
 import src.server.database.RoomData;
 import src.server.database.entity.Player;
-import src.server.database.entity.Role;
+import src.common.Role;
 
 public class PlayerRepository {
     private final GameDatabase db = GameDatabase.getInstance();

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import src.client.network.GameSession;
 import src.client.network.MessageReceiver;
 import src.client.network.ServerConnection;
-import src.client.state.GamePhase;
+import src.common.GamePhase;
+import src.common.Role;
 import src.client.state.GameState;
 import src.message.*;
 
@@ -83,7 +84,7 @@ public class RoomPresenter {
     // --- サーバーからの自発的なブロードキャストハンドラ ---
 
     public void onDistributeRole(JsonNode node) {
-        state.myRole = node.get("role").asText();
+        state.myRole = Role.valueOf(node.get("role").asText());
         state.phase = GamePhase.NIGHT;
         log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
         state.notifyListeners();

@@ -3,10 +3,12 @@ package src.client.state;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import src.common.GamePhase;
+import src.common.Role;
 
 public class GameState {
     public String myName = "";
-    public String myRole = "";
+    public Role   myRole = null;
     public String roomId = "";
     public GamePhase phase = GamePhase.LOBBY;
     public List<String> players = new ArrayList<>();

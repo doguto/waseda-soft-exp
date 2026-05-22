@@ -5,7 +5,7 @@ import src.message.SendChatResultMessage;
 import src.message.SendWolfChatMessage;
 import src.server.core.Broadcaster;
 import src.server.database.entity.ChatMessage;
-import src.server.database.entity.Role;
+import src.common.Role;
 import src.server.game.GameMaster;
 
 public class SendWolfChatService extends BaseService {

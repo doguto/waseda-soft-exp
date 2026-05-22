@@ -2,7 +2,7 @@ package src.client.presenter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import src.client.network.GameSession;
-import src.client.state.GamePhase;
+import src.common.GamePhase;
 import src.client.state.GameState;
 import src.message.*;
 

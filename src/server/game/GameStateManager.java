@@ -1,6 +1,7 @@
 package src.server.game;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import src.common.GamePhase;
 import src.server.core.ServiceType;
 
 // per-room state container. check() reads repos and delegates pushService() to GameMaster.
@@ -32,7 +33,7 @@ public class GameStateManager {
             }
             case DISCUSSION_ENDED -> {
                 if (discussionEnded.compareAndSet(false, true)) {
-                    currentPhase = GamePhase.VOTE;
+                    currentPhase = GamePhase.DAY_VOTE;
                     gameMaster.pushService(ServiceType.VOTE_PHASE_START);
                 }
             }

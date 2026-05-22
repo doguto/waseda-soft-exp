@@ -3,6 +3,7 @@ package src.client.view;
 import src.client.presenter.NightActionPresenter;
 import src.client.presenter.NoonActionPresenter;
 import src.client.presenter.RoomPresenter;
+import src.common.Role;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 
@@ -68,12 +69,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildNightActions() {
-        switch (state.myRole) {
-            case "WOLF"   -> buildWolfActions();
-            case "SEER"   -> buildSeerActions();
-            case "KNIGHT" -> buildKnightActions();
-            default       -> add(new JLabel("夜が明けるまで待機中..."));
-        }
+        if (state.myRole == Role.WOLF)        buildWolfActions();
+        else if (state.myRole == Role.SEER)   buildSeerActions();
+        else if (state.myRole == Role.KNIGHT) buildKnightActions();
+        else                                  add(new JLabel("夜が明けるまで待機中..."));
     }
 
     private void buildWolfActions() {

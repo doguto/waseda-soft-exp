@@ -4,9 +4,10 @@ import java.awt.*;
 import java.util.List;
 import javax.swing.*;
 import src.client.presenter.ChatPresenter;
-import src.client.state.GamePhase;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
+import src.common.GamePhase;
+import src.common.Role;
 
 public class ChatPanel extends JPanel implements GameStateListener {
     private final ChatPresenter chatPresenter;
@@ -85,7 +86,7 @@ public class ChatPanel extends JPanel implements GameStateListener {
     }
 
     private void updateSendable() {
-        boolean isWolf = currentState != null && "WOLF".equals(currentState.myRole);
+        boolean isWolf = currentState != null && currentState.myRole == Role.WOLF;
         boolean isDead = currentState != null && !currentState.isAlive;
 
         // タブ自体の有効/無効を更新

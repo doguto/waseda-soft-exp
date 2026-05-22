@@ -6,7 +6,7 @@ import src.client.presenter.ChatPresenter;
 import src.client.presenter.NightActionPresenter;
 import src.client.presenter.NoonActionPresenter;
 import src.client.presenter.RoomPresenter;
-import src.client.state.GamePhase;
+import src.common.GamePhase;
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
 

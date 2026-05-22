@@ -44,7 +44,7 @@ public class InformationPanel extends JPanel implements GameStateListener {
     public void onStateChanged(GameState state) {
         phaseLabel.setText(state.phase.toString());
         nameLabel.setText("名前: " + (state.myName.isEmpty() ? "-" : state.myName));
-        roleLabel.setText("役職: " + (state.myRole.isEmpty() ? "-" : state.myRole));
+        roleLabel.setText("役職: " + (state.myRole == null ? "-" : state.myRole));
         listModel.clear();
         state.players.forEach(listModel::addElement);
     }
