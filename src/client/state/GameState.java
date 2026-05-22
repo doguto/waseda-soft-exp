@@ -1,7 +1,5 @@
 package src.client.state;
 
-import src.client.network.ServerConnection;
-
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +12,6 @@ public class GameState {
     public List<String> players = new ArrayList<>();
     public List<String> chatLog = new ArrayList<>();
     public boolean isAlive = true;
-
-    // ネットワーク層への参照（ActionPanel/ChatPanelからの送信に使う）
-    public ServerConnection connection;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

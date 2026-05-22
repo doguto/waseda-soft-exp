@@ -1,24 +1,20 @@
-package src.client.ui;
+package src.client.view;
 
-import src.client.dispatch.MessageDispatcher;
-import src.client.network.MessageReceiver;
-import src.client.network.ServerConnection;
+import src.client.presenter.RoomPresenter;
 import src.client.state.GameState;
-import src.message.CreateRoomMessage;
-import src.message.JoinRoomMessage;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class LobbyPanel extends JPanel {
-    private final GameState state;
+    private final RoomPresenter roomPresenter;
     private final JTextField hostField  = new JTextField("localhost", 14);
     private final JTextField nameField  = new JTextField("プレイヤー名", 14);
     private final JTextField roomField  = new JTextField("room1", 14);
     private final JLabel statusLabel    = new JLabel(" ");
 
-    public LobbyPanel(GameState state) {
-        this.state = state;
+    public LobbyPanel(GameState state, RoomPresenter roomPresenter) {
+        this.roomPresenter = roomPresenter;
         setLayout(new GridBagLayout());
         buildUI();
     }
@@ -41,7 +37,7 @@ public class LobbyPanel extends JPanel {
         JButton createBtn = new JButton("ルーム作成");
         JButton joinBtn   = new JButton("ルーム参加");
         c.gridx = 0; c.gridy = 4; add(createBtn, c);
-        c.gridx = 1;              add(joinBtn,   c);
+        c.gridx = 1;              add(joinBtn, c);
 
         c.gridx = 0; c.gridy = 5; c.gridwidth = 2;
         add(statusLabel, c);
@@ -66,25 +62,7 @@ public class LobbyPanel extends JPanel {
         }
 
         try {
-            ServerConnection conn = new ServerConnection(host, 8080);
-            state.myName = name;
-            state.roomId = room;
-            state.connection = conn;
-
-            MessageDispatcher dispatcher = new MessageDispatcher(state);
-            new MessageReceiver(conn, dispatcher).start();
-
-            Object msg;
-            if (isCreate) {
-                CreateRoomMessage m = new CreateRoomMessage();
-                m.roomId = room; m.name = name;
-                msg = m;
-            } else {
-                JoinRoomMessage m = new JoinRoomMessage();
-                m.roomId = room; m.name = name;
-                msg = m;
-            }
-            conn.send(msg);
+            roomPresenter.connect(host, name, room, isCreate);
             statusLabel.setText("接続中...");
         } catch (Exception ex) {
             statusLabel.setText("接続失敗: " + ex.getMessage());

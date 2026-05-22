@@ -1,6 +1,6 @@
 package src.client.network;
 
-import src.client.dispatch.MessageDispatcher;
+import src.client.presenter.MessageDispatcher;
 
 import java.io.IOException;
 

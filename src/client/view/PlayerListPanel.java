@@ -1,4 +1,4 @@
-package src.client.ui;
+package src.client.view;
 
 import src.client.state.GameState;
 import src.client.state.GameStateListener;
@@ -8,8 +8,8 @@ import java.awt.*;
 
 public class PlayerListPanel extends JPanel implements GameStateListener {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
-    private final JList<String> playerList = new JList<>(listModel);
-    private final JLabel roleLabel = new JLabel("役職: -");
+    private final JList<String> playerList  = new JList<>(listModel);
+    private final JLabel roleLabel  = new JLabel("役職: -");
     private final JLabel phaseLabel = new JLabel("フェーズ: -");
 
     public PlayerListPanel(GameState state) {

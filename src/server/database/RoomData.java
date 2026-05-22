@@ -1,12 +1,11 @@
 package src.server.database;
 
-import src.server.database.entity.ChatMessage;
-import src.server.database.entity.Player;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import src.server.database.entity.ChatMessage;
+import src.server.database.entity.Player;
 
 public class RoomData {
     public final List<Player>        players      = new CopyOnWriteArrayList<>();
