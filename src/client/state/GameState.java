@@ -11,6 +11,8 @@ public class GameState {
     public GamePhase phase = GamePhase.LOBBY;
     public List<String> players = new ArrayList<>();
     public List<String> chatLog = new ArrayList<>();
+    public List<String> wolfChatLog = new ArrayList<>();
+    public List<String> graveChatLog = new ArrayList<>();
     public boolean isAlive = true;
 
     private final List<GameStateListener> listeners = new ArrayList<>();

@@ -17,7 +17,13 @@ public class ChatPresenter {
 
     public void sendChat(String text) {
         Object msg;
-        if ("WOLF".equals(state.myRole) && state.phase == GamePhase.NIGHT) {
+        if (!state.isAlive) {
+            SendGraveChatMessage m = new SendGraveChatMessage();
+            m.roomId = state.roomId;
+            m.senderName = state.myName;
+            m.text = text;
+            msg = m;
+        } else if ("WOLF".equals(state.myRole) && state.phase == GamePhase.NIGHT) {
             SendWolfChatMessage m = new SendWolfChatMessage();
             m.roomId = state.roomId;
             m.senderName = state.myName;
@@ -42,7 +48,12 @@ public class ChatPresenter {
         if (!state.players.contains(sender)) {
             state.players.add(sender);
         }
-        state.chatLog.add("[" + chatType + "] " + sender + ": " + text);
+        String line = sender + ": " + text;
+        switch (chatType) {
+            case "WOLF"  -> state.wolfChatLog.add(line);
+            case "GRAVE" -> state.graveChatLog.add(line);
+            default      -> state.chatLog.add(line);
+        }
         state.notifyListeners();
     }
 }
