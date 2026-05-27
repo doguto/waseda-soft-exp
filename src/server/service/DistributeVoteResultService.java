@@ -21,6 +21,9 @@ public class DistributeVoteResultService extends BaseService implements Broadcas
         VoteResolution resolution = gameMaster.voteRepository.resolveTarget();
         String targetName = resolution.target().orElse(null);
 
+        // 集計結果を保存しておく（処刑時に再計算しないようにする）
+        gameMaster.voteRepository.setResolvedTarget(targetName);
+
         // 各プレイヤーの得票数をまとめた結果をルーム全体へ通知する
         broadcaster.broadcast(roomId, new DistributeVoteResultMessage(targetName, resolution.counts()));
         // gameMaster.pushService(ServiceType.EXECUTE) で処刑サービスをキューに積む

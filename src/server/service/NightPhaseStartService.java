@@ -17,9 +17,8 @@ public class NightPhaseStartService extends BaseService implements BroadcastServ
     @Override
     public void call() {
         gameMaster.nightActionRepository.reset();
-        stateManager.incrementNight();
-        stateManager.resetRoundState();
-        stateManager.setPhase(GamePhase.NIGHT);
-        broadcaster.broadcastAlive(roomId, new NightPhaseStartMessage());
+        // centralize phase transition
+        stateManager.beginNight();
+        broadcaster.broadcast(roomId, new NightPhaseStartMessage());
     }
 }

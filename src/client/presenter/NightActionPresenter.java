@@ -36,6 +36,10 @@ public class NightActionPresenter {
         m.roomId = state.roomId;
         m.seerName = state.myName;
         m.targetName = target;
+        // 即時フィードバック: 押下したことが分かるようチャットログに記録して UI を更新
+        log("[夜] 占い送信: " + target);
+        state.notifyListeners();
+
         return session.sendRequest(m, SeerResultMessage.MessageType)
             .thenApply(node -> {
                 String t = node.get("targetName").asText();

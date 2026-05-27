@@ -43,10 +43,14 @@ public class MessageDispatcher {
         // --- サーバーからの自発的なブロードキャスト ---
         handlers.put(DistributeRoleMessage.MessageType,       roomPresenter::onDistributeRole);
         handlers.put(AnnounceMorningMessage.MessageType,      roomPresenter::onAnnounceMorning);
+        handlers.put(DayPhaseStartMessage.MessageType,         roomPresenter::onDayPhaseStart);
         handlers.put(ExecuteMessage.MessageType,              roomPresenter::onExecute);
+        handlers.put(VotePhaseStartMessage.MessageType,       roomPresenter::onVotePhaseStart);
+        handlers.put(NightPhaseStartMessage.MessageType,      roomPresenter::onNightPhaseStart);
         handlers.put(AnnounceGameOverMessage.MessageType,     roomPresenter::onAnnounceGameOver);
 
         handlers.put(DistributeVoteResultMessage.MessageType, noonPresenter::onDistributeVoteResult);
+        handlers.put("end_discussion_status", noonPresenter::onEndDiscussionStatus);
 
         handlers.put(MediumResultMessage.MessageType,         nightPresenter::onMediumResult);
 

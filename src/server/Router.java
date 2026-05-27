@@ -101,8 +101,9 @@ public class Router {
                     StartGameMessage msg = mapper.readValue(json, StartGameMessage.class);
                     System.out.println("[INFO] StartGame: roomId=" + msg.roomId);
                     GameMaster gm = gameMasters.get(msg.roomId);
+                    String requester = connectedPlayerName[0];
                     if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しません", List.of()));
-                    yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, broadcaster).call(msg));
+                    yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, broadcaster).call(msg, requester));
                 } catch (Exception e) {
                     System.out.println("[ERROR] StartGameService failed: " + e.getMessage());
                     e.printStackTrace();
@@ -150,7 +151,8 @@ public class Router {
                     EndDiscussionMessage msg = mapper.readValue(json, EndDiscussionMessage.class);
                     System.out.println("[INFO] EndDiscussion: roomId=" + msg.roomId);
                     GameMaster gm = gameMasters.get(msg.roomId);
-                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm).call(msg));
+                    String requester = connectedPlayerName[0];
+                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm, broadcaster).call(msg, requester));
                 } catch (Exception e) {
                     System.out.println("[ERROR] EndDiscussionService failed: " + e.getMessage());
                     e.printStackTrace();
