@@ -49,15 +49,18 @@ public class RoomPresenter {
 
             return session.sendRequest(msg, responseType)
                 .thenApply(node -> {
-                    if (node.get("success").asBoolean()) {
+                    boolean success = node.get("success").asBoolean();
+                    if (success) {
                         state.players.add(state.myName);
                         state.phase = GamePhase.WAITING;
                         log("[システム] ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
+                        state.notifyListeners();
+                        return true;
                     } else {
-                        log("[エラー] " + node.get("message").asText());
+                        // サーバー側のエラーメッセージを例外として伝播させ、LobbyPanel 側で表示させる
+                        String msgText = node.has("message") ? node.get("message").asText() : "ルーム参加に失敗しました";
+                        throw new RuntimeException(msgText);
                     }
-                    state.notifyListeners();
-                    return node.get("success").asBoolean();
                 });
         } catch (Exception e) {
             CompletableFuture<Boolean> failed = new CompletableFuture<>();

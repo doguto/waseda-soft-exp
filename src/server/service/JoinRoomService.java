@@ -34,7 +34,7 @@ public class JoinRoomService extends BaseService {
                         + "Room ID : " + roomId + "\n"
                         + "Player Name : " + msg.name;
             } else {
-                message = "ERROR : A player with the same name already exists in the room.";
+                    message = "同一名称のプレイヤーがいます。別の名前を入力してください。";
             }
         } else {
             message = "ERROR : No room exists with the specified Room ID.";

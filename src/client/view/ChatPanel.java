@@ -12,7 +12,7 @@ import src.common.Role;
 public class ChatPanel extends JPanel implements GameStateListener {
     private final ChatPresenter chatPresenter;
     private final JTextArea logArea     = new JTextArea();
-    private final JTextField inputField = new JTextField();
+    private final JTextField inputField = new JTextField(14);
     private final JButton sendButton    = new JButton("送信");
 
     private final JToggleButton villageTabBtn = new JToggleButton("全体", true);
