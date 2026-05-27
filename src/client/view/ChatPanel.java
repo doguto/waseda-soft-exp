@@ -103,9 +103,10 @@ public class ChatPanel extends JPanel implements GameStateListener {
         // 全体タブは DAY_DISCUSSION / WAITING のみ送信可
         boolean canSend;
         if (villageTabBtn.isSelected()) {
-            canSend = currentState == null
-                    || currentState.phase == GamePhase.DAY_DISCUSSION
-                    || currentState.phase == GamePhase.WAITING;
+            canSend = currentState != null
+                    && currentState.isAlive
+                    && (currentState.phase == GamePhase.DAY_DISCUSSION
+                    || currentState.phase == GamePhase.WAITING);
         } else {
             // 人狼・墓地タブはタブが有効な場合のみここに来るので常に送信可
             canSend = true;

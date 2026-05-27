@@ -15,6 +15,7 @@ public class ChatPresenter {
     }
 
     public void sendGeneralChat(String text) {
+        if (!state.isAlive) return;
         SendVillageChatMessage m = new SendVillageChatMessage();
         fill(m, text);
         session.send(m);
