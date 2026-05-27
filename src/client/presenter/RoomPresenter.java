@@ -132,7 +132,15 @@ public class RoomPresenter {
         if (executed.equals(state.myName)) {
             state.isAlive = false;
         }
-        log("[処刑] " + executed + "（" + role + "）が処刑されました");
+        if (!state.lastVoteTieCandidates.isEmpty()) {
+            // 同票で抽選が入った場合は抽選結果という表現にする
+            log("[システム] 抽選の結果、[" + executed + "] が処刑されました。");
+            // リセット
+            state.lastVoteTieCandidates.clear();
+            state.lastVoteTopCount = 0;
+        } else {
+            log("[処刑] " + executed + "（" + role + "）が処刑されました");
+        }
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();
     }

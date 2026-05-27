@@ -16,6 +16,9 @@ public class GameState {
     public List<String> wolfChatLog = new ArrayList<>();
     public List<String> graveChatLog = new ArrayList<>();
     public boolean isAlive = true;
+    // 投票で同票が発生したときの情報（クライアント表示用）
+    public List<String> lastVoteTieCandidates = new ArrayList<>();
+    public int lastVoteTopCount = 0;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

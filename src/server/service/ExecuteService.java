@@ -21,9 +21,14 @@ public class ExecuteService extends BaseService implements BroadcastService {
 
     @Override
     public void call() {
-        // VoteRepository.resolveTarget(roomId) で処刑対象を取得する
-        VoteResolution resolution = gameMaster.voteRepository.resolveTarget();
-        Optional<String> targetName = resolution.target();
+        // DistributeVoteResultService で既に決めた処刑対象があればそれを使う。
+        // なければ念のため resolveTarget() で決定する（互換性のためのフォールバック）。
+        Optional<String> targetName = gameMaster.voteRepository.getResolvedTarget();
+        VoteResolution resolution = null;
+        if (targetName.isEmpty()) {
+            resolution = gameMaster.voteRepository.resolveTarget();
+            targetName = resolution.target();
+        }
 
         RoomData room = GameDatabase.getInstance().getRoom(roomId);
         if (room != null) {
@@ -40,7 +45,7 @@ public class ExecuteService extends BaseService implements BroadcastService {
         // 処刑者の名前とロールはルーム内の全員に通知する
         broadcaster.broadcast(roomId, new ExecuteMessage(targetName.orElse(null), executedRole));
 
-        // VoteRepository.reset(roomId) で投票をリセットする
+        // VoteRepository.reset(roomId) で投票と保持された解決対象をリセットする
         gameMaster.voteRepository.reset();
 
         // PlayerRepository.wolvesWin / villagersWin で勝利判定を行う

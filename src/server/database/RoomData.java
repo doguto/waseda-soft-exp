@@ -15,6 +15,7 @@ public class RoomData {
     public volatile String           lastKnightTarget = null;
     public volatile String           seerTarget       = null;
     public volatile String           executedPlayerName = null;
+    public volatile String           resolvedVoteTarget = null;
 
     public final List<ChatMessage> villageChat = new CopyOnWriteArrayList<>();
     public final List<ChatMessage> wolfChat    = new CopyOnWriteArrayList<>();
@@ -28,5 +29,6 @@ public class RoomData {
 
     public void resetVotes() {
         votes.clear();
+        resolvedVoteTarget = null;
     }
 }
