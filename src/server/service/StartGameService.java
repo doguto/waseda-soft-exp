@@ -2,6 +2,7 @@ package src.server.service;
 
 import src.message.StartGameMessage;
 import src.message.StartGameResultMessage;
+import src.common.GamePhase;
 import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.game.GameMaster;
@@ -27,6 +28,10 @@ public class StartGameService extends BaseService {
         }
         // gameMaster.startWorker(broadcaster) でサービスキューのワーカースレッドを起動する
         gameMaster.startWorker(broadcaster);
+
+        // ゲーム開始直後は WAITING のままだと再入室時にロビー扱いになるため、
+        // 少なくとも「進行中」である状態へ進めておく。
+        gameMaster.getStateManager().setPhase(GamePhase.DAY_DISCUSSION);
 
         // gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE) をキューに積む
         gameMaster.pushService(ServiceType.DISTRIBUTE_ROLE);

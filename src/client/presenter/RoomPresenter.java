@@ -105,18 +105,22 @@ public class RoomPresenter {
         } else {
             state.phase = GamePhase.NIGHT;
         }
+        state.hasVoted = false;
+        state.hasNightActionSent = false;
         log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
         state.notifyListeners();
     }
 
     public void onNightPhaseStart(JsonNode node) {
         state.phase = GamePhase.NIGHT;
+        state.hasNightActionSent = false;
         log("[システム] 夜フェーズが開始しました");
         state.notifyListeners();
     }
 
     public void onVotePhaseStart(JsonNode node) {
         state.phase = GamePhase.DAY_VOTE;
+        state.hasVoted = false;
         log("[システム] 投票フェーズが開始しました");
         state.notifyListeners();
     }
@@ -157,6 +161,11 @@ public class RoomPresenter {
         if (node.has("isAlive")) state.isAlive = node.get("isAlive").asBoolean();
         // phase
         if (node.has("phase")) state.phase = src.common.GamePhase.valueOf(node.get("phase").asText());
+        if (node.has("endDiscussionFor")) state.endDiscussionFor = node.get("endDiscussionFor").asInt();
+        if (node.has("endDiscussionNeed")) state.endDiscussionNeed = node.get("endDiscussionNeed").asInt();
+        if (node.has("endDiscussionAlive")) state.endDiscussionAlive = node.get("endDiscussionAlive").asInt();
+        if (node.has("hasVoted")) state.hasVoted = node.get("hasVoted").asBoolean();
+        if (node.has("hasNightActionSent")) state.hasNightActionSent = node.get("hasNightActionSent").asBoolean();
 
         // chat logs
         state.chatLog.clear(); state.wolfChatLog.clear(); state.graveChatLog.clear();

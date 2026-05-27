@@ -70,11 +70,20 @@ public class Router {
                             snap.deadPlayers = room.players.stream().filter(p -> !p.alive).map(p -> p.name).toList();
                             snap.myRole = gm.playerRepository.getPlayerRole(msg.name) == null ? null : gm.playerRepository.getPlayerRole(msg.name).name();
                             snap.isAlive = gm.playerRepository.isAlive(msg.name);
+                            snap.rolesAssigned = gm.playerRepository.getPlayerRole(msg.name) != null;
                             snap.phase = gm.getStateManager().getCurrentPhase().toString();
+                            snap.endDiscussionFor = room.endDiscussionRequests.size();
+                            snap.endDiscussionNeed = (room.players.size() / 2) + 1;
+                            snap.endDiscussionAlive = gm.playerRepository.getAlivePlayers().size();
+                                snap.hasVoted = room.votes.containsKey(msg.name);
+                                snap.hasNightActionSent = room.wolfAttacks.containsKey(msg.name)
+                                    || (room.seerTarget != null && gm.playerRepository.getPlayerRole(msg.name) == src.common.Role.SEER)
+                                    || (room.knightTarget != null && gm.playerRepository.getPlayerRole(msg.name) == src.common.Role.KNIGHT);
                             snap.villageChat = room.villageChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             snap.wolfChat = room.wolfChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             snap.graveChat = room.graveChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             broadcaster.sendTo(msg.name, snap);
+                            
                         } catch (Exception e) {
                             System.out.println("[WARN] failed to send room snapshot: " + e.getMessage());
                         }
@@ -108,11 +117,26 @@ public class Router {
                             snap.deadPlayers = room.players.stream().filter(p -> !p.alive).map(p -> p.name).toList();
                             snap.myRole = gm.playerRepository.getPlayerRole(msg.name) == null ? null : gm.playerRepository.getPlayerRole(msg.name).name();
                             snap.isAlive = gm.playerRepository.isAlive(msg.name);
+                            snap.rolesAssigned = gm.playerRepository.getPlayerRole(msg.name) != null;
                             snap.phase = gm.getStateManager().getCurrentPhase().toString();
+                            snap.endDiscussionFor = room.endDiscussionRequests.size();
+                            snap.endDiscussionNeed = (room.players.size() / 2) + 1;
+                            snap.endDiscussionAlive = gm.playerRepository.getAlivePlayers().size();
+                                snap.hasVoted = room.votes.containsKey(msg.name);
+                                snap.hasNightActionSent = room.wolfAttacks.containsKey(msg.name)
+                                    || (room.seerTarget != null && gm.playerRepository.getPlayerRole(msg.name) == src.common.Role.SEER)
+                                    || (room.knightTarget != null && gm.playerRepository.getPlayerRole(msg.name) == src.common.Role.KNIGHT);
                             snap.villageChat = room.villageChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             snap.wolfChat = room.wolfChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             snap.graveChat = room.graveChat.stream().map(c -> c.senderName + ": " + c.text).toList();
                             broadcaster.sendTo(msg.name, snap);
+                            if (allowRejoin) {
+                                src.message.SendVillageChatMessage sysMsg = new src.message.SendVillageChatMessage();
+                                sysMsg.roomId = msg.roomId;
+                                sysMsg.senderName = "システム";
+                                sysMsg.text = msg.name + " が再入室しました";
+                                new src.server.service.SendVillageChatService(msg.roomId, gm, broadcaster).call(sysMsg);
+                            }
                         } catch (Exception e) {
                             System.out.println("[WARN] failed to send room snapshot: " + e.getMessage());
                         }

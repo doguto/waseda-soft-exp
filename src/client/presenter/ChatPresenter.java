@@ -45,9 +45,6 @@ public class ChatPresenter {
         String chatType = node.get("chatType").asText();
         String sender   = node.get("senderName").asText();
         String text     = node.get("text").asText();
-        if (isRealParticipant(sender) && !state.players.contains(sender)) {
-            state.players.add(sender);
-        }
         String line = sender + ": " + text;
         switch (chatType) {
             case "WOLF"  -> state.wolfChatLog.add(line);
@@ -57,13 +54,4 @@ public class ChatPresenter {
         state.notifyListeners();
     }
 
-    private boolean isRealParticipant(String sender) {
-        if (sender == null || sender.isBlank()) {
-            return false;
-        }
-        if (sender.startsWith("[") && sender.endsWith("]")) {
-            return false;
-        }
-        return !"NPC".equalsIgnoreCase(sender);
-    }
 }

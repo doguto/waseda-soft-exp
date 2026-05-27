@@ -11,6 +11,12 @@ public class RoomSnapshotMessage {
     public String myRole; // role name or null
     public boolean isAlive;
     public String phase;
+    public int endDiscussionFor;
+    public int endDiscussionNeed;
+    public int endDiscussionAlive;
+    public boolean hasVoted;
+    public boolean hasNightActionSent;
+    public boolean rolesAssigned;
 
     public List<String> villageChat;
     public List<String> wolfChat;

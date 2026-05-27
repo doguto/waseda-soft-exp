@@ -23,6 +23,13 @@ public class ClientRegistry {
         roomPlayers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(playerName);
     }
 
+    public String findRoomOfPlayer(String playerName) {
+        for (Map.Entry<String, Set<String>> e : roomPlayers.entrySet()) {
+            if (e.getValue().contains(playerName)) return e.getKey();
+        }
+        return null;
+    }
+
     public void remove(String playerName) {
         clients.remove(playerName);
         roomPlayers.values().forEach(s -> s.remove(playerName));

@@ -114,6 +114,22 @@ public class JabberServer implements Broadcaster {
         } finally {
             String name = connectedPlayerName[0];
             if (name != null) {
+                // 退出メッセージをルームに保存して全員へ broadcast
+                String roomId = registry.findRoomOfPlayer(name);
+                if (roomId != null) {
+                    GameMaster gm = gameMasters.get(roomId);
+                    if (gm != null) {
+                        try {
+                            src.message.SendVillageChatMessage cm = new src.message.SendVillageChatMessage();
+                            cm.roomId = roomId;
+                            cm.senderName = "システム";
+                            cm.text = name + " が退出しました";
+                            new src.server.service.SendVillageChatService(roomId, gm, this).call(cm);
+                        } catch (Exception ex) {
+                            System.out.println("[WARN] failed to send leave system message: " + ex.getMessage());
+                        }
+                    }
+                }
                 registry.remove(name);
                 System.out.println("[INFO] Player disconnected: " + name);
             }

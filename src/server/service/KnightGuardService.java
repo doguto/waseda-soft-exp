@@ -15,6 +15,10 @@ public class KnightGuardService extends BaseService {
         if (msg.knightName.equals(msg.targetName)) {
             return new KnightGuardResultMessage(false);
         }
+        // 二重守護禁止
+        if (gameMaster.nightActionRepository.getKnightTarget().isPresent()) {
+            return new KnightGuardResultMessage(false);
+        }
         // 連続護衛禁止
         if (gameMaster.nightActionRepository.getLastKnightTarget()
                 .map(last -> last.equals(msg.targetName)).orElse(false)) {
