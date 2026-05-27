@@ -11,6 +11,8 @@ import src.server.database.entity.Player;
 
 public class RoomData {
     public final List<Player>        players      = new CopyOnWriteArrayList<>();
+    // ルーム作成者（ホスト）の名前
+    public volatile String           hostName      = null;
     public final Map<String, String> votes        = new ConcurrentHashMap<>(); // playerName -> targetName
     public final Map<String, String> wolfAttacks  = new ConcurrentHashMap<>(); // wolfName -> targetName
     public volatile String           knightTarget     = null;

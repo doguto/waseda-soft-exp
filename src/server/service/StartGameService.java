@@ -14,7 +14,13 @@ public class StartGameService extends BaseService {
         this.broadcaster = broadcaster;
     }
 
-    public StartGameResultMessage call(StartGameMessage msg) {
+    public StartGameResultMessage call(StartGameMessage msg, String requester) {
+        // 開始権限: ルーム作成者のみ
+        String host = roomRepository.getHost(roomId);
+        if (host == null || !host.equals(requester)) {
+            return new StartGameResultMessage(false, "開始権限がありません", java.util.Collections.emptyList());
+        }
+
         // RoomRepository.canStart(roomId) で 4 人以上いるか確認する (不足時は失敗を返す)
         if (!roomRepository.canStart(roomId)) {
             return new StartGameResultMessage(false, "プレイヤーが不足しています", java.util.Collections.emptyList());

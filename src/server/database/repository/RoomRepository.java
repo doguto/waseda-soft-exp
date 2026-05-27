@@ -28,6 +28,18 @@ public class RoomRepository {
         return true;
     }
 
+    public void setHost(String roomId, String hostName) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return;
+        room.hostName = hostName;
+    }
+
+    public String getHost(String roomId) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return null;
+        return room.hostName;
+    }
+
     public List<Player> getPlayers(String roomId) {
         RoomData room = db.getRoom(roomId);
         if (room == null) return List.of();
