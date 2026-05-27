@@ -20,6 +20,6 @@ public class NightPhaseStartService extends BaseService implements BroadcastServ
         stateManager.incrementNight();
         stateManager.resetRoundState();
         stateManager.setPhase(GamePhase.NIGHT);
-        broadcaster.broadcastAlive(roomId, new NightPhaseStartMessage());
+        broadcaster.broadcast(roomId, new NightPhaseStartMessage());
     }
 }

@@ -24,6 +24,7 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
 
         List<Player> players = roomRepository.getPlayers(roomId);
         int count = players.size();
+        List<String> playerNames = players.stream().map(player -> player.name).toList();
 
         List<Role> roles = new ArrayList<>(List.of(Role.WOLF, Role.SEER, Role.KNIGHT, Role.VILLAGER));
         if (count >= 5) roles.add(Role.CRAZY_VILLAGER);
@@ -35,7 +36,7 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
             String playerName = players.get(i).name;
             Role role = roles.get(i);
             gameMaster.playerRepository.setRole(playerName, role);
-            broadcaster.sendTo(playerName, new DistributeRoleMessage(role.name()));
+            broadcaster.sendTo(playerName, new DistributeRoleMessage(role.name(), playerNames));
         }
 
         gameMaster.pushService(ServiceType.NIGHT_PHASE_START);

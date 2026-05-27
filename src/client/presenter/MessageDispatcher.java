@@ -44,6 +44,8 @@ public class MessageDispatcher {
         handlers.put(DistributeRoleMessage.MessageType,       roomPresenter::onDistributeRole);
         handlers.put(AnnounceMorningMessage.MessageType,      roomPresenter::onAnnounceMorning);
         handlers.put(ExecuteMessage.MessageType,              roomPresenter::onExecute);
+        handlers.put(VotePhaseStartMessage.MessageType,       roomPresenter::onVotePhaseStart);
+        handlers.put(NightPhaseStartMessage.MessageType,      roomPresenter::onNightPhaseStart);
         handlers.put(AnnounceGameOverMessage.MessageType,     roomPresenter::onAnnounceGameOver);
 
         handlers.put(DistributeVoteResultMessage.MessageType, noonPresenter::onDistributeVoteResult);

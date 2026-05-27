@@ -85,8 +85,27 @@ public class RoomPresenter {
 
     public void onDistributeRole(JsonNode node) {
         state.myRole = Role.valueOf(node.get("role").asText());
+        state.players.clear();
+        JsonNode playersNode = node.get("player_names");
+        if (playersNode != null && playersNode.isArray()) {
+            for (JsonNode playerNode : playersNode) {
+                state.players.add(playerNode.asText());
+            }
+        }
         state.phase = GamePhase.NIGHT;
         log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
+        state.notifyListeners();
+    }
+
+    public void onNightPhaseStart(JsonNode node) {
+        state.phase = GamePhase.NIGHT;
+        log("[システム] 夜フェーズが開始しました");
+        state.notifyListeners();
+    }
+
+    public void onVotePhaseStart(JsonNode node) {
+        state.phase = GamePhase.DAY_VOTE;
+        log("[システム] 投票フェーズが開始しました");
         state.notifyListeners();
     }
 
@@ -95,6 +114,9 @@ public class RoomPresenter {
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
             state.players.remove(dead);
+            if (dead.equals(state.myName)) {
+                state.isAlive = false;
+            }
             log("[朝] " + dead + " が死亡しました...");
         } else {
             log("[朝] 誰も死亡しませんでした（守護成功）");
@@ -107,6 +129,9 @@ public class RoomPresenter {
         String executed = node.get("executedPlayerName").asText();
         String role = node.get("executedRole").asText();
         state.players.remove(executed);
+        if (executed.equals(state.myName)) {
+            state.isAlive = false;
+        }
         log("[処刑] " + executed + "（" + role + "）が処刑されました");
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();

@@ -50,7 +50,7 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         AnnounceMorningMessage announceMsg = new AnnounceMorningMessage();
         announceMsg.deadPlayerName = deadPlayerName;
 
-        broadcaster.broadcastAlive(roomId, announceMsg);
+        broadcaster.broadcast(roomId, announceMsg);
 
         // 5. 占い師に占い結果を通知する
         Optional<String> seerTargetOpt = gameMaster.nightActionRepository.getSeerTarget();
