@@ -15,7 +15,8 @@ public class ChatPresenter {
     }
 
     public void sendGeneralChat(String text) {
-        if (!state.isAlive) return;
+        // allow send when alive, or when the game is over (spectator chat)
+        if (!state.isAlive && state.phase != src.common.GamePhase.GAME_OVER) return;
         SendVillageChatMessage m = new SendVillageChatMessage();
         fill(m, text);
         session.send(m);

@@ -16,9 +16,6 @@ public class SendVillageChatService extends BaseService {
     }
 
     public SendChatResultMessage call(SendVillageChatMessage msg) {
-        if (!gameMaster.playerRepository.isAlive(msg.senderName)) {
-            return new SendChatResultMessage(false);
-        }
         gameMaster.chatRepository.addVillageMessage(new ChatMessage(msg.senderName, msg.text));
         broadcaster.broadcast(msg.roomId,
             new ChatBroadcastMessage("VILLAGE", msg.senderName, msg.text));
