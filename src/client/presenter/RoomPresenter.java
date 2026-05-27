@@ -51,8 +51,6 @@ public class RoomPresenter {
                 .thenApply(node -> {
                     boolean success = node.get("success").asBoolean();
                     if (success) {
-                        state.players.add(state.myName);
-                        state.phase = GamePhase.WAITING;
                         log("[システム] ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
                         state.notifyListeners();
                         return true;
@@ -136,6 +134,40 @@ public class RoomPresenter {
             log("[朝] 誰も死亡しませんでした（守護成功）");
         }
         state.phase = GamePhase.DAY_DISCUSSION;
+        state.notifyListeners();
+    }
+
+    public void onRoomSnapshot(JsonNode node) {
+        // players
+        state.players.clear();
+        JsonNode playersNode = node.get("players");
+        if (playersNode != null && playersNode.isArray()) {
+            for (JsonNode p : playersNode) state.players.add(p.asText());
+        }
+        // deadPlayers
+        state.deadPlayers.clear();
+        JsonNode deadNode = node.get("deadPlayers");
+        if (deadNode != null && deadNode.isArray()) {
+            for (JsonNode d : deadNode) state.deadPlayers.add(d.asText());
+        }
+        // role & alive
+        if (node.has("myRole") && !node.get("myRole").isNull()) {
+            state.myRole = src.common.Role.valueOf(node.get("myRole").asText());
+        }
+        if (node.has("isAlive")) state.isAlive = node.get("isAlive").asBoolean();
+        // phase
+        if (node.has("phase")) state.phase = src.common.GamePhase.valueOf(node.get("phase").asText());
+
+        // chat logs
+        state.chatLog.clear(); state.wolfChatLog.clear(); state.graveChatLog.clear();
+        JsonNode v = node.get("villageChat");
+        if (v != null && v.isArray()) for (JsonNode c : v) state.chatLog.add(c.asText());
+        JsonNode w = node.get("wolfChat");
+        if (w != null && w.isArray()) for (JsonNode c : w) state.wolfChatLog.add(c.asText());
+        JsonNode g = node.get("graveChat");
+        if (g != null && g.isArray()) for (JsonNode c : g) state.graveChatLog.add(c.asText());
+
+        log("[システム] ルーム状態を復元しました");
         state.notifyListeners();
     }
 

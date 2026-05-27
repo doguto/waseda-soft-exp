@@ -15,6 +15,10 @@ public class ClientRegistry {
         clients.put(playerName, writer);
     }
 
+    public boolean isConnected(String playerName) {
+        return clients.containsKey(playerName);
+    }
+
     public void joinRoom(String roomId, String playerName) {
         roomPlayers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(playerName);
     }

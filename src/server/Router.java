@@ -58,10 +58,28 @@ public class Router {
                     CreateRoomMessage msg = mapper.readValue(json, CreateRoomMessage.class);
                     System.out.println("[INFO] CreateRoom: roomId=" + msg.roomId + " name=" + msg.name);
                     GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
-                    registry.register(msg.name, out);
-                    registry.joinRoom(msg.roomId, msg.name);
-                    connectedPlayerName[0] = msg.name;
-                    yield mapper.writeValueAsString(new CreateRoomService(msg.roomId, gm).call(msg));
+                    var result = new CreateRoomService(msg.roomId, gm).call(msg);
+                    if (result.success) {
+                        registry.register(msg.name, out);
+                        registry.joinRoom(msg.roomId, msg.name);
+                        connectedPlayerName[0] = msg.name;
+                        try {
+                            src.server.database.RoomData room = src.server.database.GameDatabase.getInstance().getRoom(msg.roomId);
+                            src.message.RoomSnapshotMessage snap = new src.message.RoomSnapshotMessage();
+                            snap.players = room.players.stream().map(p -> p.name).toList();
+                            snap.deadPlayers = room.players.stream().filter(p -> !p.alive).map(p -> p.name).toList();
+                            snap.myRole = gm.playerRepository.getPlayerRole(msg.name) == null ? null : gm.playerRepository.getPlayerRole(msg.name).name();
+                            snap.isAlive = gm.playerRepository.isAlive(msg.name);
+                            snap.phase = gm.getStateManager().getCurrentPhase().toString();
+                            snap.villageChat = room.villageChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            snap.wolfChat = room.wolfChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            snap.graveChat = room.graveChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            broadcaster.sendTo(msg.name, snap);
+                        } catch (Exception e) {
+                            System.out.println("[WARN] failed to send room snapshot: " + e.getMessage());
+                        }
+                    }
+                    yield mapper.writeValueAsString(result);
                 } catch (Exception e) {
                     System.out.println("[ERROR] CreateRoomService failed: " + e.getMessage());
                     e.printStackTrace();
@@ -73,10 +91,33 @@ public class Router {
                     JoinRoomMessage msg = mapper.readValue(json, JoinRoomMessage.class);
                     System.out.println("[INFO] JoinRoom: roomId=" + msg.roomId + " name=" + msg.name);
                     GameMaster gm = gameMasters.computeIfAbsent(msg.roomId, GameMaster::new);
-                    registry.register(msg.name, out);
-                    registry.joinRoom(msg.roomId, msg.name);
-                    connectedPlayerName[0] = msg.name;
-                    yield mapper.writeValueAsString(new JoinRoomService(msg.roomId, gm).call(msg));
+                    // 先にクライアント登録を行うと、サービスで拒否された場合でも接続が有効になってしまう。
+                    // そのためサービス呼び出しで参加可否を判定し、成功時に登録を行う。
+                    // 再入室判定: ルームにプレイヤー名が存在するが現在接続が切れている場合は再入室を許可する
+                    boolean allowRejoin = gm.playerRepository.findByName(msg.name).isPresent() && !registry.isConnected(msg.name);
+                    var result = new JoinRoomService(msg.roomId, gm).call(msg, allowRejoin);
+                    if (result.success) {
+                        registry.register(msg.name, out);
+                        registry.joinRoom(msg.roomId, msg.name);
+                        connectedPlayerName[0] = msg.name;
+                        try {
+                            // 参加成功時に現在の部屋状態を再入室クライアントへ送信する
+                            src.server.database.RoomData room = src.server.database.GameDatabase.getInstance().getRoom(msg.roomId);
+                            src.message.RoomSnapshotMessage snap = new src.message.RoomSnapshotMessage();
+                            snap.players = room.players.stream().map(p -> p.name).toList();
+                            snap.deadPlayers = room.players.stream().filter(p -> !p.alive).map(p -> p.name).toList();
+                            snap.myRole = gm.playerRepository.getPlayerRole(msg.name) == null ? null : gm.playerRepository.getPlayerRole(msg.name).name();
+                            snap.isAlive = gm.playerRepository.isAlive(msg.name);
+                            snap.phase = gm.getStateManager().getCurrentPhase().toString();
+                            snap.villageChat = room.villageChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            snap.wolfChat = room.wolfChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            snap.graveChat = room.graveChat.stream().map(c -> c.senderName + ": " + c.text).toList();
+                            broadcaster.sendTo(msg.name, snap);
+                        } catch (Exception e) {
+                            System.out.println("[WARN] failed to send room snapshot: " + e.getMessage());
+                        }
+                    }
+                    yield mapper.writeValueAsString(result);
                 } catch (Exception e) {
                     System.out.println("[ERROR] JoinRoomService failed: " + e.getMessage());
                     e.printStackTrace();
