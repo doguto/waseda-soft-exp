@@ -12,6 +12,8 @@ public class GameState {
     public String roomId = "";
     public GamePhase phase = GamePhase.LOBBY;
     public List<String> players = new ArrayList<>();
+    // 全プレイヤーのうち死亡したプレイヤー名のリスト（表示用）
+    public List<String> deadPlayers = new ArrayList<>();
     public List<String> chatLog = new ArrayList<>();
     public List<String> wolfChatLog = new ArrayList<>();
     public List<String> graveChatLog = new ArrayList<>();

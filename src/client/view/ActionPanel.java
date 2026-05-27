@@ -121,6 +121,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
     private JComboBox<String> targetBox() {
         String[] targets = state.players.stream()
             .filter(p -> !p.equals(state.myName))
+            .filter(p -> !state.deadPlayers.contains(p))
             .toArray(String[]::new);
         return new JComboBox<>(targets);
     }

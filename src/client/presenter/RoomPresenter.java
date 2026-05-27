@@ -86,6 +86,7 @@ public class RoomPresenter {
     public void onDistributeRole(JsonNode node) {
         state.myRole = Role.valueOf(node.get("role").asText());
         state.players.clear();
+        state.deadPlayers.clear();
         JsonNode playersNode = node.get("player_names");
         if (playersNode != null && playersNode.isArray()) {
             for (JsonNode playerNode : playersNode) {
@@ -123,7 +124,7 @@ public class RoomPresenter {
         JsonNode deadNode = node.get("deadPlayerName");
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
-            state.players.remove(dead);
+            if (!state.deadPlayers.contains(dead)) state.deadPlayers.add(dead);
             if (dead.equals(state.myName)) {
                 state.isAlive = false;
             }
@@ -157,7 +158,7 @@ public class RoomPresenter {
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
         String role = node.get("executedRole").asText();
-        state.players.remove(executed);
+        if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
         }
