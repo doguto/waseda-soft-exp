@@ -59,12 +59,12 @@ public class ActionPanel extends JPanel implements GameStateListener {
         endBtn.addActionListener(e -> noonPresenter.requestEndDiscussion());
         add(endBtn);
 
-        // 賛成数表示: 表示は "x / 生きている人数（過半数まであと need）"
+        // 賛成数表示: 表示は "x / 生きている人数（過半数まであと remaining）"
         int forCount = state.endDiscussionFor;
         int alive = state.endDiscussionAlive > 0 ? state.endDiscussionAlive : state.players.size();
         int need = state.endDiscussionNeed;
         int remaining = Math.max(0, need - forCount);
-        String label = forCount + " / " + alive + "（過半数まであと " + need + "）";
+        String label = forCount + " / " + alive + "（過半数まであと " + remaining + "）";
         add(new JLabel(label));
     }
 

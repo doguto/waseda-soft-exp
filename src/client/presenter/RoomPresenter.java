@@ -92,7 +92,17 @@ public class RoomPresenter {
                 state.players.add(playerNode.asText());
             }
         }
-        state.phase = GamePhase.NIGHT;
+        // サーバーが初日の配役時に昼へ遷移させる場合は DistributeRoleMessage.startDay が true になる
+        JsonNode startDayNode = node.get("startDay");
+        if (startDayNode != null && startDayNode.asBoolean(false)) {
+            int alive = state.players.size();
+            state.endDiscussionFor = 0;
+            state.endDiscussionAlive = alive;
+            state.endDiscussionNeed = (alive / 2) + 1;
+            state.phase = GamePhase.DAY_DISCUSSION;
+        } else {
+            state.phase = GamePhase.NIGHT;
+        }
         log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
         state.notifyListeners();
     }
@@ -122,6 +132,25 @@ public class RoomPresenter {
             log("[朝] 誰も死亡しませんでした（守護成功）");
         }
         state.phase = GamePhase.DAY_DISCUSSION;
+        state.notifyListeners();
+    }
+
+    public void onDayPhaseStart(JsonNode node) {
+        // 明示的な昼開始メッセージを受け取ったらクライアントを昼フェーズに設定
+        JsonNode votesForNode = node.get("votesFor");
+        JsonNode aliveCountNode = node.get("aliveCount");
+        JsonNode needNode = node.get("need");
+        if (votesForNode != null) {
+            state.endDiscussionFor = votesForNode.asInt();
+        }
+        if (aliveCountNode != null) {
+            state.endDiscussionAlive = aliveCountNode.asInt();
+        }
+        if (needNode != null) {
+            state.endDiscussionNeed = needNode.asInt();
+        }
+        state.phase = GamePhase.DAY_DISCUSSION;
+        log("[システム] 昼フェーズ（議論）が開始しました");
         state.notifyListeners();
     }
 

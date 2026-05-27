@@ -32,6 +32,12 @@ public class GameMaster {
         this.stateManager = new GameStateManager(this);
     }
 
+    // ── helper transitions ─────────────────────────────────────────────────
+    public void startInitialDay() {
+        // 初日の配役後に昼へ移行するための共通処理
+        stateManager.beginDayDiscussion();
+    }
+
     public void pushService(ServiceType type) {
         queue.offer(type);
     }

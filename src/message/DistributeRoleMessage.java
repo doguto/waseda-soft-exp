@@ -7,6 +7,7 @@ public class DistributeRoleMessage {
     public String message_type = MessageType;
     public String role;
     public List<String> player_names;
+    public boolean startDay = false; // server sets true for initial start -> client shows Day
 
     public DistributeRoleMessage() {}
     public DistributeRoleMessage(String role, List<String> player_names) {

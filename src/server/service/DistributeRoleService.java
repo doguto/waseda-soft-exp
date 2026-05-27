@@ -32,13 +32,24 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
 
         Collections.shuffle(roles);
 
+        // 初日の扱い判定
+        boolean initialStart = gameMaster.getStateManager().getNightCount() == 0;
+
         for (int i = 0; i < players.size(); i++) {
             String playerName = players.get(i).name;
             Role role = roles.get(i);
             gameMaster.playerRepository.setRole(playerName, role);
-            broadcaster.sendTo(playerName, new DistributeRoleMessage(role.name(), playerNames));
+            DistributeRoleMessage drm = new DistributeRoleMessage(role.name(), playerNames);
+            drm.startDay = initialStart;
+            broadcaster.sendTo(playerName, drm);
         }
-
-        gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
+        if (initialStart) {
+            // NPC 発見のシステムメッセージを全体に流す
+            broadcaster.broadcast(roomId, new src.message.ChatBroadcastMessage("VILLAGE", "[システム]", "NPCが無残な姿で発見されました"));
+            // フェーズを昼(議論)に遷移（GameMaster ヘルパーを使用）
+            gameMaster.startInitialDay();
+        } else {
+            gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
+        }
     }
 }

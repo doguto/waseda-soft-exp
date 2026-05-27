@@ -18,7 +18,7 @@ public class VotePhaseStartService extends BaseService implements BroadcastServi
     public void call() {
         // VoteRepository.reset(roomId) で前回の投票結果をクリアする
         gameMaster.voteRepository.reset();
-        // stateManager.setPhase(GamePhase.VOTE) でフェーズを投票に設定する
+        // stateManager.setPhase(GamePhase.DAY_VOTE) でフェーズを投票に設定する
         stateManager.setPhase(GamePhase.DAY_VOTE);
         // broadcaster.broadcast(roomId, ...) でルーム内全員に投票開始を通知する
         broadcaster.broadcast(roomId, new VotePhaseStartMessage());

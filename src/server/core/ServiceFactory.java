@@ -9,6 +9,7 @@ public class ServiceFactory {
         return switch (type) {
             case DISTRIBUTE_ROLE         -> new DistributeRoleService(roomId, gameMaster, broadcaster);
             case ANNOUNCE_MORNING        -> new AnnounceMorningService(roomId, gameMaster, broadcaster);
+            case DAY_PHASE_START         -> new DayPhaseStartService(roomId, gameMaster, broadcaster);
             case DISTRIBUTE_VOTE_RESULT  -> new DistributeVoteResultService(roomId, gameMaster, broadcaster);
             case EXECUTE                 -> new ExecuteService(roomId, gameMaster, broadcaster);
             case ANNOUNCE_GAME_OVER      -> new AnnounceGameOverService(roomId, gameMaster, broadcaster);

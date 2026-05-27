@@ -45,7 +45,7 @@ public class ChatPresenter {
         String chatType = node.get("chatType").asText();
         String sender   = node.get("senderName").asText();
         String text     = node.get("text").asText();
-        if (!state.players.contains(sender)) {
+        if (isRealParticipant(sender) && !state.players.contains(sender)) {
             state.players.add(sender);
         }
         String line = sender + ": " + text;
@@ -55,5 +55,15 @@ public class ChatPresenter {
             default      -> state.chatLog.add(line);
         }
         state.notifyListeners();
+    }
+
+    private boolean isRealParticipant(String sender) {
+        if (sender == null || sender.isBlank()) {
+            return false;
+        }
+        if (sender.startsWith("[") && sender.endsWith("]")) {
+            return false;
+        }
+        return !"NPC".equalsIgnoreCase(sender);
     }
 }
