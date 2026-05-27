@@ -150,7 +150,8 @@ public class Router {
                     EndDiscussionMessage msg = mapper.readValue(json, EndDiscussionMessage.class);
                     System.out.println("[INFO] EndDiscussion: roomId=" + msg.roomId);
                     GameMaster gm = gameMasters.get(msg.roomId);
-                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm).call(msg));
+                    String requester = connectedPlayerName[0];
+                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm).call(msg, requester));
                 } catch (Exception e) {
                     System.out.println("[ERROR] EndDiscussionService failed: " + e.getMessage());
                     e.printStackTrace();

@@ -3,6 +3,8 @@ package src.server.database;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.CopyOnWriteArrayList;
 import src.server.database.entity.ChatMessage;
 import src.server.database.entity.Player;
@@ -15,6 +17,7 @@ public class RoomData {
     public volatile String           lastKnightTarget = null;
     public volatile String           seerTarget       = null;
     public volatile String           executedPlayerName = null;
+    public final KeySetView<String, Boolean> endDiscussionRequests = ConcurrentHashMap.newKeySet();
     public volatile String           resolvedVoteTarget = null;
 
     public final List<ChatMessage> villageChat = new CopyOnWriteArrayList<>();
@@ -30,5 +33,6 @@ public class RoomData {
     public void resetVotes() {
         votes.clear();
         resolvedVoteTarget = null;
+        endDiscussionRequests.clear();
     }
 }

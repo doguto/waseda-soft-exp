@@ -37,4 +37,22 @@ public class RoomRepository {
     public boolean canStart(String roomId) {
         return getPlayers(roomId).size() >= 4;
     }
+
+    public boolean addEndDiscussionRequest(String roomId, String playerName) {
+        var room = db.getRoom(roomId);
+        if (room == null) return false;
+        return room.endDiscussionRequests.add(playerName);
+    }
+
+    public int countEndDiscussionRequests(String roomId) {
+        var room = db.getRoom(roomId);
+        if (room == null) return 0;
+        return room.endDiscussionRequests.size();
+    }
+
+    public void clearEndDiscussionRequests(String roomId) {
+        var room = db.getRoom(roomId);
+        if (room == null) return;
+        room.endDiscussionRequests.clear();
+    }
 }
