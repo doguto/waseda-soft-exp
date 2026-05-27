@@ -94,6 +94,17 @@ public class NoonActionPresenter {
         state.notifyListeners();
     }
 
+    public void onEndDiscussionStatus(JsonNode node) {
+        int votesFor = node.get("votesFor").asInt();
+        int alive = node.get("aliveCount").asInt();
+        int need = node.get("need").asInt();
+        // 更新用フィールドを GameState に持たせる
+        state.endDiscussionFor = votesFor;
+        state.endDiscussionNeed = need;
+        state.endDiscussionAlive = alive;
+        state.notifyListeners();
+    }
+
     private void log(String msg) {
         state.chatLog.add(msg);
     }

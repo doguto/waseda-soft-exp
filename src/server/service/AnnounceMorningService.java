@@ -83,6 +83,16 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
             gameMaster.getStateManager().setPhase(GamePhase.DAY_DISCUSSION);
         }
 
+        // 朝になったので前回の議論終了リクエストはリセットしてクライアントへ通知する
+        try {
+            int alive = gameMaster.playerRepository.getAlivePlayers().size();
+            int need = (alive / 2) + 1;
+            roomRepository.clearEndDiscussionRequests(roomId);
+            broadcaster.broadcast(roomId, new src.message.EndDiscussionStatusMessage(0, alive, need));
+        } catch (Exception e) {
+            // ignore
+        }
+
         // 8. 夜行動をリセットする（lastKnightTarget を保存してからリセット）
         gameMaster.nightActionRepository.updateLastKnightTarget();
         gameMaster.nightActionRepository.reset();

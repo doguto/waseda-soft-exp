@@ -19,6 +19,10 @@ public class GameState {
     // 投票で同票が発生したときの情報（クライアント表示用）
     public List<String> lastVoteTieCandidates = new ArrayList<>();
     public int lastVoteTopCount = 0;
+    // 議論終了の賛成数表示用
+    public int endDiscussionFor = 0;
+    public int endDiscussionNeed = 0;
+    public int endDiscussionAlive = 0;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

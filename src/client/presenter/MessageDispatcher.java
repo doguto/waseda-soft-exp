@@ -49,6 +49,7 @@ public class MessageDispatcher {
         handlers.put(AnnounceGameOverMessage.MessageType,     roomPresenter::onAnnounceGameOver);
 
         handlers.put(DistributeVoteResultMessage.MessageType, noonPresenter::onDistributeVoteResult);
+        handlers.put("end_discussion_status", noonPresenter::onEndDiscussionStatus);
 
         handlers.put(MediumResultMessage.MessageType,         nightPresenter::onMediumResult);
 

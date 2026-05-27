@@ -151,7 +151,7 @@ public class Router {
                     System.out.println("[INFO] EndDiscussion: roomId=" + msg.roomId);
                     GameMaster gm = gameMasters.get(msg.roomId);
                     String requester = connectedPlayerName[0];
-                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm).call(msg, requester));
+                    yield mapper.writeValueAsString(new EndDiscussionService(msg.roomId, gm, broadcaster).call(msg, requester));
                 } catch (Exception e) {
                     System.out.println("[ERROR] EndDiscussionService failed: " + e.getMessage());
                     e.printStackTrace();
