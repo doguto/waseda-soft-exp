@@ -48,11 +48,17 @@ public class ChatPresenter {
         if (isRealParticipant(sender) && !state.players.contains(sender)) {
             state.players.add(sender);
         }
-        String line = "【" + channelLabel(chatType) + "】" + sender + ": " + text;
-        switch (chatType) {
-            case "WOLF"  -> state.wolfChatLog.add(line);
-            case "GRAVE" -> state.graveChatLog.add(line);
-            default      -> state.chatLog.add(line);
+        // システム送信者はチャンネルラベルを付けず、明示的に「【システム】」として表示する
+        if ("システム".equals(sender) || "SYSTEM".equalsIgnoreCase(sender) || "System".equals(sender)) {
+            String line = "【システム】 " + text;
+            state.chatLog.add(line);
+        } else {
+            String line = "【" + channelLabel(chatType) + "】" + sender + ": " + text;
+            switch (chatType) {
+                case "WOLF"  -> state.wolfChatLog.add(line);
+                case "GRAVE" -> state.graveChatLog.add(line);
+                default      -> state.chatLog.add(line);
+            }
         }
         state.notifyListeners();
     }
@@ -82,6 +88,9 @@ public class ChatPresenter {
         if (sender.startsWith("[") && sender.endsWith("]")) {
             return false;
         }
-        return !"NPC".equalsIgnoreCase(sender);
+        // Exclude known non-player senders (NPC, system notifications)
+        if ("NPC".equalsIgnoreCase(sender)) return false;
+        if ("システム".equals(sender) || "SYSTEM".equalsIgnoreCase(sender) || "System".equals(sender)) return false;
+        return true;
     }
 }

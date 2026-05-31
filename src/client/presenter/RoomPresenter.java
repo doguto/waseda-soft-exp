@@ -51,9 +51,8 @@ public class RoomPresenter {
                 .thenApply(node -> {
                     boolean success = node.get("success").asBoolean();
                     if (success) {
-                        // 即時に自分をローカルリストへ追加し、ロビー状態へ
+                        // 即時に自分をローカルリストへ追加する（フェーズはサーバーの RoomSnapshot を待つ）
                         if (!state.players.contains(state.myName)) state.players.add(state.myName);
-                        state.phase = GamePhase.WAITING;
                         log("【システム】ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
                         state.notifyListeners();
                         return true;
