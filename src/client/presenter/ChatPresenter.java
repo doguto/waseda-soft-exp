@@ -42,16 +42,13 @@ public class ChatPresenter {
     // --- サーバーメッセージハンドラ ---
 
     public void onChatBroadcast(JsonNode node) {
-        String chatType = node.get("chatType").asText();
-        String sender   = node.get("senderName").asText();
-        String text     = node.get("text").asText();
-<<<<<<< HEAD
+        String chatType = readText(node, "chatType", "VILLAGE");
+        String sender   = readText(node, "senderName", "システム");
+        String text     = readText(node, "text", "");
         if (isRealParticipant(sender) && !state.players.contains(sender)) {
             state.players.add(sender);
         }
-=======
->>>>>>> feature/day-phase-gui
-        String line = sender + ": " + text;
+        String line = "【" + channelLabel(chatType) + "】" + sender + ": " + text;
         switch (chatType) {
             case "WOLF"  -> state.wolfChatLog.add(line);
             case "GRAVE" -> state.graveChatLog.add(line);
@@ -60,7 +57,24 @@ public class ChatPresenter {
         state.notifyListeners();
     }
 
-<<<<<<< HEAD
+    private String channelLabel(String chatType) {
+        return switch (chatType) {
+            case "WOLF" -> "人狼";
+            case "GRAVE" -> "墓地";
+            default -> "全体";
+        };
+    }
+
+    private String readText(JsonNode node, String fieldName, String fallback) {
+        if (node != null && node.hasNonNull(fieldName)) {
+            String value = node.get(fieldName).asText();
+            if (value != null && !value.isBlank() && !"null".equalsIgnoreCase(value)) {
+                return value;
+            }
+        }
+        return fallback;
+    }
+
     private boolean isRealParticipant(String sender) {
         if (sender == null || sender.isBlank()) {
             return false;
@@ -70,6 +84,4 @@ public class ChatPresenter {
         }
         return !"NPC".equalsIgnoreCase(sender);
     }
-=======
->>>>>>> feature/day-phase-gui
 }

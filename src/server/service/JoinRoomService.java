@@ -40,9 +40,6 @@ public class JoinRoomService extends BaseService {
                     message = "同一名称のプレイヤーがいます。別の名前を入力してください。";
                 }
             } else {
-<<<<<<< HEAD
-                    message = "同一名称のプレイヤーがいます。別の名前を入力してください。";
-=======
                 // 新規参加の場合はゲームが既に開始していると拒否する
                 if (gameMaster != null && gameMaster.getStateManager().getCurrentPhase() != src.common.GamePhase.WAITING) {
                     return new JoinRoomResultMessage(false, "ゲームは既に開始されています");
@@ -55,7 +52,6 @@ public class JoinRoomService extends BaseService {
                 } else {
                     message = "ERROR : Failed to add player.";
                 }
->>>>>>> feature/day-phase-gui
             }
         } else {
             message = "ERROR : No room exists with the specified Room ID.";

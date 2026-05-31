@@ -25,11 +25,8 @@ public class GameState {
     public int endDiscussionFor = 0;
     public int endDiscussionNeed = 0;
     public int endDiscussionAlive = 0;
-<<<<<<< HEAD
-=======
     public boolean hasVoted = false;
     public boolean hasNightActionSent = false;
->>>>>>> feature/day-phase-gui
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

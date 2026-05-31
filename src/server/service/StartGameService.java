@@ -24,21 +24,15 @@ public class StartGameService extends BaseService {
         if (host == null || !host.equals(requester)) {
             return new StartGameResultMessage(false, "開始権限がありません", java.util.Collections.emptyList());
         }
+    // ゲーム開始時点で実際に接続している人数だけを参加対象にする
+    var room = src.server.database.GameDatabase.getInstance().getRoom(roomId);
+    if (room == null) {
+        return new StartGameResultMessage(false, "ルームが存在しません", java.util.Collections.emptyList());
+    }
 
-<<<<<<< HEAD
-        // RoomRepository.canStart(roomId) で 4 人以上いるか確認する (不足時は失敗を返す)
-        if (!roomRepository.canStart(roomId)) {
-=======
-        // ゲーム開始時点で実際に接続している人数だけを参加対象にする
-        var room = src.server.database.GameDatabase.getInstance().getRoom(roomId);
-        if (room == null) {
-            return new StartGameResultMessage(false, "ルームが存在しません", java.util.Collections.emptyList());
-        }
+    room.players.removeIf(player -> !activePlayerNames.contains(player.name));
 
-        room.players.removeIf(player -> !activePlayerNames.contains(player.name));
-
-        if (room.players.size() < 4) {
->>>>>>> feature/day-phase-gui
+    if (room.players.size() < 4) {
             return new StartGameResultMessage(false, "プレイヤーが不足しています", java.util.Collections.emptyList());
         }
         // gameMaster.startWorker(broadcaster) でサービスキューのワーカースレッドを起動する
