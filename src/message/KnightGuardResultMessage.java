@@ -4,7 +4,12 @@ public class KnightGuardResultMessage {
     public static final String MessageType = "knight_guard_result";
     public String message_type = MessageType;
     public boolean success;
+    public String message;
 
     public KnightGuardResultMessage() {}
     public KnightGuardResultMessage(boolean success) { this.success = success; }
+    public KnightGuardResultMessage(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
 }

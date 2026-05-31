@@ -28,6 +28,15 @@ public class RoomRepository {
         return true;
     }
 
+<<<<<<< HEAD
+=======
+    public boolean removePlayer(String roomId, String playerName) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return false;
+        return room.players.removeIf(player -> player.name.equals(playerName));
+    }
+
+>>>>>>> feature/day-phase-gui
     public void setHost(String roomId, String hostName) {
         RoomData room = db.getRoom(roomId);
         if (room == null) return;

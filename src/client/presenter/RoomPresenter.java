@@ -51,9 +51,10 @@ public class RoomPresenter {
                 .thenApply(node -> {
                     boolean success = node.get("success").asBoolean();
                     if (success) {
-                        state.players.add(state.myName);
+                        // 即時に自分をローカルリストへ追加し、ロビー状態へ
+                        if (!state.players.contains(state.myName)) state.players.add(state.myName);
                         state.phase = GamePhase.WAITING;
-                        log("[システム] ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
+                        log("【システム】ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
                         state.notifyListeners();
                         return true;
                     } else {
@@ -107,19 +108,24 @@ public class RoomPresenter {
         } else {
             state.phase = GamePhase.NIGHT;
         }
-        log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
+        // 初期フラグをリセット
+        state.hasVoted = false;
+        state.hasNightActionSent = false;
+        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole + "】 です。");
         state.notifyListeners();
     }
 
     public void onNightPhaseStart(JsonNode node) {
         state.phase = GamePhase.NIGHT;
-        log("[システム] 夜フェーズが開始しました");
+        state.hasNightActionSent = false;
+        log("【システム】夜になりました。");
         state.notifyListeners();
     }
 
     public void onVotePhaseStart(JsonNode node) {
         state.phase = GamePhase.DAY_VOTE;
-        log("[システム] 投票フェーズが開始しました");
+        state.hasVoted = false;
+        log("【システム】投票が始まりました。");
         state.notifyListeners();
     }
 
@@ -131,14 +137,52 @@ public class RoomPresenter {
             if (dead.equals(state.myName)) {
                 state.isAlive = false;
             }
-            log("[朝] " + dead + " が死亡しました...");
+            log("【システム】朝になりました。死体が見つかりました: " + dead + "。");
         } else {
-            log("[朝] 誰も死亡しませんでした（守護成功）");
+            log("【システム】朝になりました。死体はありませんでした。");
         }
         state.phase = GamePhase.DAY_DISCUSSION;
         state.notifyListeners();
     }
 
+    public void onRoomSnapshot(JsonNode node) {
+        // players
+        state.players.clear();
+        JsonNode playersNode = node.get("players");
+        if (playersNode != null && playersNode.isArray()) {
+            for (JsonNode p : playersNode) state.players.add(p.asText());
+        }
+        // deadPlayers
+        state.deadPlayers.clear();
+        JsonNode deadNode = node.get("deadPlayers");
+        if (deadNode != null && deadNode.isArray()) {
+            for (JsonNode d : deadNode) state.deadPlayers.add(d.asText());
+        }
+        // role & alive
+        if (node.has("myRole") && !node.get("myRole").isNull()) {
+            state.myRole = src.common.Role.valueOf(node.get("myRole").asText());
+        }
+        if (node.has("isAlive")) state.isAlive = node.get("isAlive").asBoolean();
+        // phase
+        if (node.has("phase")) state.phase = src.common.GamePhase.valueOf(node.get("phase").asText());
+        if (node.has("endDiscussionFor")) state.endDiscussionFor = node.get("endDiscussionFor").asInt();
+        if (node.has("endDiscussionNeed")) state.endDiscussionNeed = node.get("endDiscussionNeed").asInt();
+        if (node.has("endDiscussionAlive")) state.endDiscussionAlive = node.get("endDiscussionAlive").asInt();
+        if (node.has("hasVoted")) state.hasVoted = node.get("hasVoted").asBoolean();
+        if (node.has("hasNightActionSent")) state.hasNightActionSent = node.get("hasNightActionSent").asBoolean();
+
+        // chat logs
+        state.chatLog.clear(); state.wolfChatLog.clear(); state.graveChatLog.clear();
+        JsonNode v = node.get("villageChat");
+        if (v != null && v.isArray()) for (JsonNode c : v) state.chatLog.add(c.asText());
+        JsonNode w = node.get("wolfChat");
+        if (w != null && w.isArray()) for (JsonNode c : w) state.wolfChatLog.add(c.asText());
+        JsonNode g = node.get("graveChat");
+        if (g != null && g.isArray()) for (JsonNode c : g) state.graveChatLog.add(c.asText());
+
+        log("【システム】ルーム状態を復元しました");
+        state.notifyListeners();
+    }
     public void onDayPhaseStart(JsonNode node) {
         // 明示的な昼開始メッセージを受け取ったらクライアントを昼フェーズに設定
         JsonNode votesForNode = node.get("votesFor");

@@ -69,9 +69,18 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildVoteActions() {
+        if (state.hasVoted) {
+            add(new JLabel("投票済み"));
+            return;
+        }
         String[] candidates = state.players.stream()
             .filter(p -> !p.equals(state.myName))
+            .filter(p -> !state.deadPlayers.contains(p))
             .toArray(String[]::new);
+        if (candidates.length == 0) {
+            add(new JLabel("投票先がありません"));
+            return;
+        }
         JComboBox<String> box = new JComboBox<>(candidates);
         JButton voteBtn = new JButton("投票");
         voteBtn.addActionListener(e -> {
@@ -89,6 +98,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildWolfActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("襲撃済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("襲撃");
         btn.addActionListener(e -> {
@@ -99,6 +112,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildSeerActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("占い済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("占い");
         btn.addActionListener(e -> {
@@ -109,6 +126,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildKnightActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("守護済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("守護");
         btn.addActionListener(e -> {

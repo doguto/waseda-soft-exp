@@ -45,9 +45,12 @@ public class ChatPresenter {
         String chatType = node.get("chatType").asText();
         String sender   = node.get("senderName").asText();
         String text     = node.get("text").asText();
+<<<<<<< HEAD
         if (isRealParticipant(sender) && !state.players.contains(sender)) {
             state.players.add(sender);
         }
+=======
+>>>>>>> feature/day-phase-gui
         String line = sender + ": " + text;
         switch (chatType) {
             case "WOLF"  -> state.wolfChatLog.add(line);
@@ -57,6 +60,7 @@ public class ChatPresenter {
         state.notifyListeners();
     }
 
+<<<<<<< HEAD
     private boolean isRealParticipant(String sender) {
         if (sender == null || sender.isBlank()) {
             return false;
@@ -66,4 +70,6 @@ public class ChatPresenter {
         }
         return !"NPC".equalsIgnoreCase(sender);
     }
+=======
+>>>>>>> feature/day-phase-gui
 }

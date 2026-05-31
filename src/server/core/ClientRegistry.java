@@ -15,8 +15,23 @@ public class ClientRegistry {
         clients.put(playerName, writer);
     }
 
+    public boolean isConnected(String playerName) {
+        return clients.containsKey(playerName);
+    }
+
     public void joinRoom(String roomId, String playerName) {
         roomPlayers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(playerName);
+    }
+
+    public Set<String> getRoomPlayers(String roomId) {
+        return Set.copyOf(roomPlayers.getOrDefault(roomId, Set.of()));
+    }
+
+    public String findRoomOfPlayer(String playerName) {
+        for (Map.Entry<String, Set<String>> e : roomPlayers.entrySet()) {
+            if (e.getValue().contains(playerName)) return e.getKey();
+        }
+        return null;
     }
 
     public void remove(String playerName) {

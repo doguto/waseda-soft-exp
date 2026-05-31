@@ -18,13 +18,23 @@ public class NightActionPresenter {
 
     /** 襲撃リクエスト。受け付け確認を待って応答 node を返す。 */
     public CompletableFuture<JsonNode> sendWolfAttack(String target) {
+        if (state.hasNightActionSent) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
         WolfAttackMessage m = new WolfAttackMessage();
         m.roomId = state.roomId;
         m.wolfName = state.myName;
         m.targetName = target;
         return session.sendRequest(m, WolfAttackResultMessage.MessageType)
             .thenApply(node -> {
-                log("[夜] 襲撃を実行しました");
+                boolean success = node.has("success") ? node.get("success").asBoolean() : true;
+                if (success) {
+                    state.hasNightActionSent = true;
+                    log("[夜] 襲撃を実行しました");
+                } else {
+                    String message = node.has("message") ? node.get("message").asText() : "襲撃済みです";
+                    log("[夜] " + message);
+                }
                 state.notifyListeners();
                 return node;
             });
@@ -32,6 +42,9 @@ public class NightActionPresenter {
 
     /** 占いリクエスト。占い結果 (SeerResultMessage) の node を返す。 */
     public CompletableFuture<JsonNode> sendSeerInvestigate(String target) {
+        if (state.hasNightActionSent) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
         SeerInvestigateMessage m = new SeerInvestigateMessage();
         m.roomId = state.roomId;
         m.seerName = state.myName;
@@ -42,9 +55,16 @@ public class NightActionPresenter {
 
         return session.sendRequest(m, SeerResultMessage.MessageType)
             .thenApply(node -> {
-                String t = node.get("targetName").asText();
-                boolean isWolf = node.get("isWolf").asBoolean();
-                log("[占い結果] " + t + " は " + (isWolf ? "🐺 人狼！" : "村人側"));
+                boolean success = node.has("success") ? node.get("success").asBoolean() : true;
+                if (success) {
+                    state.hasNightActionSent = true;
+                    String t = node.get("targetName").asText();
+                    boolean isWolf = node.get("isWolf").asBoolean();
+                    log("[占い結果] " + t + " は " + (isWolf ? "🐺 人狼！" : "村人側"));
+                } else {
+                    String message = node.has("message") ? node.get("message").asText() : "占い済みです";
+                    log("[夜] " + message);
+                }
                 state.notifyListeners();
                 return node;
             });
@@ -52,13 +72,23 @@ public class NightActionPresenter {
 
     /** 守護リクエスト。受け付け確認を待って応答 node を返す。 */
     public CompletableFuture<JsonNode> sendKnightGuard(String target) {
+        if (state.hasNightActionSent) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
         KnightGuardMessage m = new KnightGuardMessage();
         m.roomId = state.roomId;
         m.knightName = state.myName;
         m.targetName = target;
         return session.sendRequest(m, KnightGuardResultMessage.MessageType)
             .thenApply(node -> {
-                log("[夜] 守護しました");
+                boolean success = node.has("success") ? node.get("success").asBoolean() : true;
+                if (success) {
+                    state.hasNightActionSent = true;
+                    log("[夜] 守護しました");
+                } else {
+                    String message = node.has("message") ? node.get("message").asText() : "守護済みです";
+                    log("[夜] " + message);
+                }
                 state.notifyListeners();
                 return node;
             });
