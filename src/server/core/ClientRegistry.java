@@ -23,6 +23,10 @@ public class ClientRegistry {
         roomPlayers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(playerName);
     }
 
+    public Set<String> getRoomPlayers(String roomId) {
+        return Set.copyOf(roomPlayers.getOrDefault(roomId, Set.of()));
+    }
+
     public String findRoomOfPlayer(String playerName) {
         for (Map.Entry<String, Set<String>> e : roomPlayers.entrySet()) {
             if (e.getValue().contains(playerName)) return e.getKey();

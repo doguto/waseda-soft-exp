@@ -168,7 +168,7 @@ public class Router {
                     GameMaster gm = gameMasters.get(msg.roomId);
                     String requester = connectedPlayerName[0];
                     if (gm == null) yield mapper.writeValueAsString(new StartGameResultMessage(false, "ルームが存在しません", List.of()));
-                    yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, broadcaster).call(msg, requester));
+                    yield mapper.writeValueAsString(new StartGameService(msg.roomId, gm, broadcaster, registry.getRoomPlayers(msg.roomId)).call(msg, requester));
                 } catch (Exception e) {
                     System.out.println("[ERROR] StartGameService failed: " + e.getMessage());
                     e.printStackTrace();

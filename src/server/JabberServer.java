@@ -3,6 +3,7 @@ package src.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import src.server.core.Broadcaster;
 import src.server.core.ClientRegistry;
+import src.server.database.GameDatabase;
 import src.common.Role;
 import src.server.game.GameMaster;
 
@@ -120,6 +121,9 @@ public class JabberServer implements Broadcaster {
                     GameMaster gm = gameMasters.get(roomId);
                     if (gm != null) {
                         try {
+                            if (gm.getStateManager().getCurrentPhase() == src.common.GamePhase.WAITING) {
+                                new src.server.database.repository.RoomRepository().removePlayer(roomId, name);
+                            }
                             src.message.SendVillageChatMessage cm = new src.message.SendVillageChatMessage();
                             cm.roomId = roomId;
                             cm.senderName = "システム";
