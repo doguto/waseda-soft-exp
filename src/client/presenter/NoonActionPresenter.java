@@ -36,15 +36,25 @@ public class NoonActionPresenter {
 
     /** 投票リクエスト。受け付け確認を待って true を返す。 */
     public CompletableFuture<Boolean> sendVote(String target) {
+        if (state.hasVoted) {
+            return java.util.concurrent.CompletableFuture.completedFuture(false);
+        }
         VoteMessage m = new VoteMessage();
         m.roomId = state.roomId;
         m.playerName = state.myName;
         m.targetName = target;
         return session.sendRequest(m, VoteResultMessage.MessageType)
             .thenApply(node -> {
-                log("[投票] 投票を受け付けました");
+                boolean success = node.has("success") ? node.get("success").asBoolean() : true;
+                if (success) {
+                    state.hasVoted = true;
+                    log("[投票] 投票を受け付けました");
+                } else {
+                    String message = node.has("message") ? node.get("message").asText() : "投票済みです";
+                    log("[投票] " + message);
+                }
                 state.notifyListeners();
-                return true;
+                return success;
             });
     }
 

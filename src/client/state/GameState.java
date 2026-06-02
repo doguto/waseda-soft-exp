@@ -25,6 +25,8 @@ public class GameState {
     public int endDiscussionFor = 0;
     public int endDiscussionNeed = 0;
     public int endDiscussionAlive = 0;
+    public boolean hasVoted = false;
+    public boolean hasNightActionSent = false;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

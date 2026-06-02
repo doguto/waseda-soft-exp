@@ -16,10 +16,13 @@ public class SeerInvestigateService extends BaseService {
         //   → 全夜アクション完了なら GameStateManager が ANNOUNCE_MORNING をキューに積む
         // 占い結果 (対象プレイヤーのロール) は AnnounceMorningService で占い師にユニキャストされる
         // 成功を SeerInvestigateResultMessage に設定して返す
+        if (gameMaster.nightActionRepository.getSeerTarget().isPresent()) {
+            return new SeerInvestigateResultMessage(false);
+        }
         gameMaster.nightActionRepository.saveSeerTarget(msg.targetName);
         gameMaster.getStateManager().check(GameEvent.NIGHT_ACTION_SUBMITTED);
 
-        return new SeerInvestigateResultMessage();
+        return new SeerInvestigateResultMessage(true);
     }
 }
 // ★★占い結果通知って朝でいいの？？★★
