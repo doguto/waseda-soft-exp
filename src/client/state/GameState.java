@@ -27,6 +27,8 @@ public class GameState {
     public int endDiscussionAlive = 0;
     public boolean hasVoted = false;
     public boolean hasNightActionSent = false;
+    // ゲーム終了時の勝利陣営（"WOLF" / "VILLAGER"、未決定なら null）
+    public String winner = null;
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

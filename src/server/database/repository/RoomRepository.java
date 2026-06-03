@@ -7,6 +7,11 @@ import src.server.database.entity.Player;
 import java.util.List;
 
 public class RoomRepository {
+    /** ゲーム開始に必要な最小人数。 */
+    public static final int MIN_PLAYERS = 4;
+    /** 1ルームの最大人数（役職構成の上限）。 */
+    public static final int MAX_PLAYERS = 12;
+
     private final GameDatabase db = GameDatabase.getInstance();
 
     public boolean create(String roomId) {
@@ -51,7 +56,12 @@ public class RoomRepository {
     }
 
     public boolean canStart(String roomId) {
-        return getPlayers(roomId).size() >= 4;
+        int n = getPlayers(roomId).size();
+        return n >= MIN_PLAYERS && n <= MAX_PLAYERS;
+    }
+
+    public boolean isFull(String roomId) {
+        return getPlayers(roomId).size() >= MAX_PLAYERS;
     }
 
     public boolean addEndDiscussionRequest(String roomId, String playerName) {

@@ -45,6 +45,10 @@ public class GamePanel extends JPanel implements GameStateListener {
         chatPanel.onStateChanged(state);
         playerListPanel.onStateChanged(state);
         actionPanel.onStateChanged(state);
+
+        // フェーズ(朝/昼/夜)に応じてウィンドウ全体の背景色を変更
+        PhaseTheme.applyBackground(this, PhaseTheme.backgroundFor(state.phase));
+        repaint();
     }
 
     @Override
