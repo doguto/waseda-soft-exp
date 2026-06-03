@@ -10,9 +10,14 @@ import src.common.Role;
 import src.client.state.GameState;
 import src.message.*;
 
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import java.util.concurrent.CompletableFuture;
 
 public class RoomPresenter {
+    /** 処刑演出の表示時間(ms)。この時間後にサーバーへ完了通知を送る。 */
+    public static final int EXECUTE_OVERLAY_MILLIS = 4000;
+
     private final GameState state;
     private final GameSession session;
     private final SfxPlayer sfxPlayer = new SfxPlayer();
@@ -55,6 +60,7 @@ public class RoomPresenter {
                     if (success) {
                         // 即時に自分をローカルリストへ追加する（フェーズはサーバーの RoomSnapshot を待つ）
                         if (!state.players.contains(state.myName)) state.players.add(state.myName);
+                        state.isHost = isCreate;
                         log("【システム】ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
                         state.notifyListeners();
                         return true;
@@ -113,7 +119,7 @@ public class RoomPresenter {
         // 初期フラグをリセット
         state.hasVoted = false;
         state.hasNightActionSent = false;
-        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole + "】 です。");
+        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole.displayName() + "】 です。");
         state.notifyListeners();
     }
 
@@ -217,9 +223,7 @@ public class RoomPresenter {
             state.isAlive = false;
         }
         if (!state.lastVoteTieCandidates.isEmpty()) {
-            // 同票で抽選が入った場合は抽選結果という表現にする
             log("[システム] 抽選の結果、[" + executed + "] が処刑されました。");
-            // リセット
             state.lastVoteTieCandidates.clear();
             state.lastVoteTopCount = 0;
         } else {
@@ -227,6 +231,16 @@ public class RoomPresenter {
         }
         state.phase = GamePhase.EXECUTE;
         state.notifyListeners();
+        // EDT上でタイマーを起動し、演出時間後にサーバーへ完了通知を送る
+        SwingUtilities.invokeLater(() -> {
+            Timer t = new Timer(EXECUTE_OVERLAY_MILLIS, e -> sendExecuteReady());
+            t.setRepeats(false);
+            t.start();
+        });
+    }
+
+    private void sendExecuteReady() {
+        session.send(new ExecuteReadyMessage(state.roomId, state.myName));
     }
 
     public void onAnnounceGameOver(JsonNode node) {
@@ -238,8 +252,26 @@ public class RoomPresenter {
         if (state.myRole != null) {
             boolean iWon = state.myRole.isWolfCamp() == wolfCampWon;
             String camp = state.myRole.isWolfCamp() ? "人狼陣営" : "村人陣営";
-            log("[結果] あなたは" + camp + "（" + state.myRole + "）。"
+            log("[結果] あなたは" + camp + "（" + state.myRole.displayName() + "）。"
                     + (iWon ? "勝利しました！" : "敗北しました…"));
+        }
+        // 全プレイヤーの役職を公開する
+        state.finalRoles.clear();
+        JsonNode playersNode = node.get("players");
+        if (playersNode != null && playersNode.isArray()) {
+            log("── 役職公開 ──");
+            for (JsonNode p : playersNode) {
+                String pName = p.get("name").asText();
+                String pRoleStr = p.get("role").asText();
+                String pRoleDisplay;
+                try {
+                    pRoleDisplay = Role.valueOf(pRoleStr).displayName();
+                } catch (IllegalArgumentException e) {
+                    pRoleDisplay = pRoleStr;
+                }
+                state.finalRoles.put(pName, pRoleDisplay);
+                log("  " + pName + ": " + pRoleDisplay);
+            }
         }
         state.phase = GamePhase.GAME_OVER;
         state.notifyListeners();

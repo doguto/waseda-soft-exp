@@ -27,7 +27,7 @@ import src.common.GamePhase;
 public final class PhaseTheme {
 
     /** 時間帯の区分。 */
-    public enum TimeOfDay { MORNING, DAY, NIGHT, NONE }
+    public enum TimeOfDay { MORNING, DAY, NIGHT, EXECUTE, NONE }
 
     /** フェーズ非依存の既定背景色（画像が無い時間帯）。 */
     public static final Color DEFAULT_BACKGROUND = new Color(0xF2, 0xF2, 0xF2);
@@ -46,6 +46,7 @@ public final class PhaseTheme {
         load(TimeOfDay.MORNING, "status_morning.png");
         load(TimeOfDay.DAY,     "status_day.png");
         load(TimeOfDay.NIGHT,   "status_night.png");
+        load(TimeOfDay.EXECUTE, "execute.png");
     }
 
     private PhaseTheme() {}
@@ -58,6 +59,7 @@ public final class PhaseTheme {
             case MORNING:        return TimeOfDay.MORNING;
             case DAY_DISCUSSION:
             case DAY_VOTE:       return TimeOfDay.DAY;
+            case EXECUTE:        return TimeOfDay.EXECUTE;
             default:             return TimeOfDay.NONE;
         }
     }
@@ -81,20 +83,28 @@ public final class PhaseTheme {
      * 指定コンポーネント配下のパネル類に背景色を再帰的に適用する。
      * テキスト/リスト/ボタンなどの入力・表示部品は可読性のため変更しない。
      */
+    /**
+     * 指定コンポーネント配下のパネル類に背景色を再帰的に適用する。
+     * "noPhaseTheme" クライアントプロパティが true のコンポーネントとその子孫はスキップする。
+     */
     public static void applyBackground(Component comp, Color bg) {
+        if (comp instanceof JComponent jc
+                && Boolean.TRUE.equals(jc.getClientProperty("noPhaseTheme"))) {
+            return; // 独自ダークテーマを持つパネルはスキップ
+        }
         if (comp instanceof JTextComponent
                 || comp instanceof JList
                 || comp instanceof AbstractButton
-                || comp instanceof JComboBox) {
-            return; // 中身の部品はそのまま
+                || comp instanceof JComboBox
+                || comp instanceof JLabel) {
+            return; // 入力・表示部品の前景色を壊さない
         }
-        if (comp instanceof JComponent) {
-            JComponent jc = (JComponent) comp;
+        if (comp instanceof JComponent jc) {
             jc.setOpaque(true);
             jc.setBackground(bg);
         }
-        if (comp instanceof Container) {
-            for (Component child : ((Container) comp).getComponents()) {
+        if (comp instanceof Container c) {
+            for (Component child : c.getComponents()) {
                 applyBackground(child, bg);
             }
         }

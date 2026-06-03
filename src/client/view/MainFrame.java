@@ -19,19 +19,17 @@ public class MainFrame extends JFrame implements GameStateListener {
     /** 役職発表時のフルスクリーン画像の表示時間(ms)。 */
     private static final int ROLE_INTRO_MILLIS = 1500;
     private static final int ROLE_OVERLAY_MILLIS = 3000;
-    /** 勝利画像の表示時間(ms)。クリックで早めに閉じることもできる。 */
-    private static final int WIN_OVERLAY_MILLIS = 6000;
+    private static final int WIN_OVERLAY_MILLIS  = 6000;
 
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
-    // 役職発表・勝利演出に使う、画面いっぱいの画像オーバーレイ（一定時間/クリックで消える）
     private final PhaseOverlay overlay = new PhaseOverlay(ROLE_OVERLAY_MILLIS);
     private final BufferedImage roleIntroImage = readImage("role_intro_you_are.png");
     private Timer pendingRoleOverlayTimer;
     // 直近に発表した役職（同一役職の状態更新で再表示しないため）
     private Role lastShownRole = null;
-    // 勝利画像を表示済みか（GAME_OVER 中の状態更新で再表示しないため）
     private boolean winShown = false;
+    private boolean executeAnimationShown = false;
 
     public MainFrame(GameState state, RoomPresenter room, NoonActionPresenter noon,
                      NightActionPresenter night, ChatPresenter chat) {
@@ -43,7 +41,6 @@ public class MainFrame extends JFrame implements GameStateListener {
         cards.add(new LobbyPanel(state, room),                   "LOBBY");
         cards.add(new GamePanel(state, room, noon, night, chat), "GAME");
         add(cards);
-        // 役職発表・勝利演出用の全画面画像オーバーレイ
         setGlassPane(overlay);
 
         state.addListener(this);
@@ -57,6 +54,7 @@ public class MainFrame extends JFrame implements GameStateListener {
             cancelPendingRoleOverlay();
             lastShownRole = null; // 次のゲームでも役職発表演出を再表示できるようにする
             winShown = false;
+            executeAnimationShown = false;
         } else {
             cardLayout.show(cards, "GAME");
         }
@@ -66,6 +64,16 @@ public class MainFrame extends JFrame implements GameStateListener {
         if (role != null && role != lastShownRole) {
             showRoleOverlay(role);
             lastShownRole = role;
+        }
+
+        // 処刑フェーズ: 演出画像を表示する（タイマーと完了通知は RoomPresenter が管理）
+        if (state.phase == GamePhase.EXECUTE && !executeAnimationShown) {
+            executeAnimationShown = true;
+            BufferedImage execImg = PhaseTheme.rawImageFor(GamePhase.EXECUTE);
+            overlay.show(execImg, RoomPresenter.EXECUTE_OVERLAY_MILLIS);
+        }
+        if (state.phase != GamePhase.EXECUTE) {
+            executeAnimationShown = false;
         }
 
         // ゲーム終了時に、勝利陣営の画像を画面いっぱいに表示する（クリックで閉じればチャットへ戻れる）
