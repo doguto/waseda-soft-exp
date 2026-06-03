@@ -11,6 +11,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ActionPanel extends JPanel implements GameStateListener {
+    private static final Color PANEL_BG = new Color(11, 18, 38, 220);
+    private static final Color BORDER_COLOR = new Color(92, 111, 160);
+    private static final Color TEXT_COLOR = new Color(230, 236, 250);
+    private static final Color BUTTON_BG = new Color(27, 38, 70);
+    private static final Color BUTTON_BORDER = new Color(121, 139, 191);
+
     private final GameState state;
     private final RoomPresenter roomPresenter;
     private final NoonActionPresenter noonPresenter;
@@ -23,7 +29,11 @@ public class ActionPanel extends JPanel implements GameStateListener {
         this.noonPresenter  = noonPresenter;
         this.nightPresenter = nightPresenter;
         setLayout(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        setBorder(BorderFactory.createTitledBorder("アクション"));
+        setOpaque(false);
+        setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+            BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
         setPreferredSize(new Dimension(0, 80));
     }
 
@@ -38,6 +48,11 @@ public class ActionPanel extends JPanel implements GameStateListener {
             case GAME_OVER      -> add(new JLabel("ゲーム終了"));
             default             -> {}
         }
+        for (Component component : getComponents()) {
+            if (component instanceof JComponent jc) {
+                jc.setForeground(TEXT_COLOR);
+            }
+        }
         revalidate();
         repaint();
     }
@@ -45,6 +60,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
     private void buildWaitingActions() {
         JButton startBtn = new JButton("ゲーム開始");
         startBtn.addActionListener(e -> roomPresenter.requestStartGame());
+        styleButton(startBtn);
         add(startBtn);
         add(new JLabel("（ゲーム開始はホストのみ有効）"));
     }
@@ -52,6 +68,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
     private void buildDiscussionActions() {
         JButton endBtn = new JButton("議論終了");
         endBtn.addActionListener(e -> noonPresenter.requestEndDiscussion());
+        styleButton(endBtn);
         add(endBtn);
     }
 
@@ -65,6 +82,8 @@ public class ActionPanel extends JPanel implements GameStateListener {
             String target = (String) box.getSelectedItem();
             if (target != null) noonPresenter.sendVote(target);
         });
+        styleComboBox(box);
+        styleButton(voteBtn);
         add(new JLabel("投票先:")); add(box); add(voteBtn);
     }
 
@@ -82,6 +101,8 @@ public class ActionPanel extends JPanel implements GameStateListener {
             String target = (String) box.getSelectedItem();
             if (target != null) nightPresenter.sendWolfAttack(target);
         });
+        styleComboBox(box);
+        styleButton(btn);
         add(new JLabel("襲撃対象:")); add(box); add(btn);
     }
 
@@ -92,6 +113,8 @@ public class ActionPanel extends JPanel implements GameStateListener {
             String target = (String) box.getSelectedItem();
             if (target != null) nightPresenter.sendSeerInvestigate(target);
         });
+        styleComboBox(box);
+        styleButton(btn);
         add(new JLabel("占い対象:")); add(box); add(btn);
     }
 
@@ -102,6 +125,8 @@ public class ActionPanel extends JPanel implements GameStateListener {
             String target = (String) box.getSelectedItem();
             if (target != null) nightPresenter.sendKnightGuard(target);
         });
+        styleComboBox(box);
+        styleButton(btn);
         add(new JLabel("守護対象:")); add(box); add(btn);
     }
 
@@ -109,6 +134,39 @@ public class ActionPanel extends JPanel implements GameStateListener {
         String[] targets = state.players.stream()
             .filter(p -> !p.equals(state.myName))
             .toArray(String[]::new);
-        return new JComboBox<>(targets);
+        JComboBox<String> box = new JComboBox<>(targets);
+        box.setPreferredSize(new Dimension(160, 26));
+        box.setOpaque(true);
+        box.setBackground(BUTTON_BG);
+        box.setForeground(TEXT_COLOR);
+        box.setBorder(BorderFactory.createLineBorder(BUTTON_BORDER, 1, true));
+        box.setFocusable(true);
+        box.setPrototypeDisplayValue("長めのプレイヤー名サンプル");
+        box.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setBackground(isSelected ? BUTTON_BORDER : BUTTON_BG);
+                setForeground(TEXT_COLOR);
+                return this;
+            }
+        });
+        return box;
+    }
+
+    private void styleButton(AbstractButton button) {
+        button.setBackground(BUTTON_BG);
+        button.setForeground(TEXT_COLOR);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createLineBorder(BUTTON_BORDER, 1, true));
+        button.setOpaque(true);
+    }
+
+    private void styleComboBox(JComboBox<String> box) {
+        box.setBackground(BUTTON_BG);
+        box.setForeground(TEXT_COLOR);
+        box.setBorder(BorderFactory.createLineBorder(BUTTON_BORDER, 1, true));
+        box.setOpaque(true);
     }
 }

@@ -86,6 +86,7 @@ public class RoomPresenter {
     public void onDistributeRole(JsonNode node) {
         state.myRole = Role.valueOf(node.get("role").asText());
         state.phase = GamePhase.NIGHT;
+        state.isAlive = true;
         log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
         state.notifyListeners();
     }
@@ -94,6 +95,9 @@ public class RoomPresenter {
         JsonNode deadNode = node.get("deadPlayerName");
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
+            if (dead.equals(state.myName)) {
+                state.isAlive = false;
+            }
             state.players.remove(dead);
             log("[朝] " + dead + " が死亡しました...");
         } else {
@@ -106,6 +110,9 @@ public class RoomPresenter {
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
         String role = node.get("executedRole").asText();
+        if (executed.equals(state.myName)) {
+            state.isAlive = false;
+        }
         state.players.remove(executed);
         log("[処刑] " + executed + "（" + role + "）が処刑されました");
         state.phase = GamePhase.NIGHT;
