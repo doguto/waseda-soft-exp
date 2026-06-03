@@ -205,7 +205,7 @@ public class RoomPresenter {
 
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
-        String role = node.get("executedRole").asText();
+        // 処刑時に役職は公開しない（役職は霊媒結果やゲーム終了時のみ判明する）
         if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
@@ -217,7 +217,7 @@ public class RoomPresenter {
             state.lastVoteTieCandidates.clear();
             state.lastVoteTopCount = 0;
         } else {
-            log("[処刑] " + executed + "（" + role + "）が処刑されました");
+            log("[処刑] " + executed + " が処刑されました");
         }
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();
@@ -225,7 +225,15 @@ public class RoomPresenter {
 
     public void onAnnounceGameOver(JsonNode node) {
         String winner = node.get("winner").asText();
-        log("[ゲーム終了] 勝者: " + winner);
+        boolean wolfCampWon = "WOLF".equals(winner);
+        log("[ゲーム終了] 勝者: " + (wolfCampWon ? "人狼陣営" : "村人陣営"));
+        // 狂人は人狼陣営として勝敗を判定する（Role.isWolfCamp）
+        if (state.myRole != null) {
+            boolean iWon = state.myRole.isWolfCamp() == wolfCampWon;
+            String camp = state.myRole.isWolfCamp() ? "人狼陣営" : "村人陣営";
+            log("[結果] あなたは" + camp + "（" + state.myRole + "）。"
+                    + (iWon ? "勝利しました！" : "敗北しました…"));
+        }
         state.phase = GamePhase.GAME_OVER;
         state.notifyListeners();
     }

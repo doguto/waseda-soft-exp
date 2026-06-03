@@ -17,14 +17,14 @@ public class WolfAttackService extends BaseService {
         // 成功を WolfAttackResultMessage に設定して返す
 
         if (gameMaster.nightActionRepository.hasWolfAttacked(msg.wolfName)) {
-            return new WolfAttackResultMessage(false);
+            return new WolfAttackResultMessage(false, "すでに襲撃を選択済みです。");
         }
         gameMaster.nightActionRepository.saveWolfAttack(msg.wolfName, msg.targetName);
 
         // 夜行動が提出されたことを通知
         gameMaster.getStateManager().check(GameEvent.NIGHT_ACTION_SUBMITTED);
 
-        // 結果を返す
-        return new WolfAttackResultMessage();
+        // 成功を返す（success=true を明示する）
+        return new WolfAttackResultMessage(true);
     }
 }

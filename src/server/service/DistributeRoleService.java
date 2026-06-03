@@ -26,9 +26,22 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
         int count = players.size();
         List<String> playerNames = players.stream().map(player -> player.name).toList();
 
-        List<Role> roles = new ArrayList<>(List.of(Role.WOLF, Role.SEER, Role.KNIGHT, Role.VILLAGER));
+        // 人数に応じた役職構成を組み立てる
+        //   基本: 人狼1・占い師1・騎士1
+        //   7人以上: 人狼を2人に
+        //   5人以上: 狂人を追加
+        //   6人以上: 霊媒師を追加
+        //   残りの枠はすべて村人で埋める
+        List<Role> roles = new ArrayList<>();
+        roles.add(Role.WOLF);
+        roles.add(Role.SEER);
+        roles.add(Role.KNIGHT);
+        if (count >= 7) roles.add(Role.WOLF);
         if (count >= 5) roles.add(Role.CRAZY_VILLAGER);
         if (count >= 6) roles.add(Role.MEDIUM);
+        while (roles.size() < count) roles.add(Role.VILLAGER);
+        // 万一役職数が人数を超えた場合は人数ぶんに切り詰める（安全策）
+        if (roles.size() > count) roles = new ArrayList<>(roles.subList(0, count));
 
         Collections.shuffle(roles);
 
