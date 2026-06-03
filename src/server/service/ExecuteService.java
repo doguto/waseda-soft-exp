@@ -10,6 +10,7 @@ import src.server.database.RoomData;
 import src.server.database.entity.Player;
 import src.server.database.repository.VoteRepository.VoteResolution;
 import src.server.game.GameMaster;
+import src.common.GamePhase;
 
 public class ExecuteService extends BaseService implements BroadcastService {
     private final Broadcaster broadcaster;
@@ -33,6 +34,7 @@ public class ExecuteService extends BaseService implements BroadcastService {
         RoomData room = GameDatabase.getInstance().getRoom(roomId);
         if (room != null) {
             room.executedPlayerName = targetName.orElse(null);
+            room.executeReadyPlayers.clear();
         }
 
         String executedRole = null;
@@ -42,19 +44,19 @@ public class ExecuteService extends BaseService implements BroadcastService {
             gameMaster.playerRepository.kill(targetName.get());
         }
 
-        // 処刑者の名前とロールはルーム内の全員に通知する
-        broadcaster.broadcast(roomId, new ExecuteMessage(targetName.orElse(null), executedRole));
-
         // VoteRepository.reset(roomId) で投票と保持された解決対象をリセットする
         gameMaster.voteRepository.reset();
 
         // PlayerRepository.wolvesWin / villagersWin で勝利判定を行う
         if (gameMaster.playerRepository.villagersWin() || gameMaster.playerRepository.wolvesWin()) {
-            // 勝利なら gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER) をキューに積む
+            // 勝利なら処刑を通知してすぐゲーム終了へ遷移する
+            broadcaster.broadcast(roomId, new ExecuteMessage(targetName.orElse(null), executedRole));
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
-            // 続行なら gameMaster.pushService(ServiceType.NIGHT_PHASE_START) をキューに積む
-            gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
+            // 続行なら EXECUTEフェーズへ移行し、全クライアントの演出完了を待つ
+            stateManager.setPhase(GamePhase.EXECUTE);
+            broadcaster.broadcast(roomId, new ExecuteMessage(targetName.orElse(null), executedRole));
+            // 各クライアントが ExecuteReadyMessage を送信したら ExecuteReadyService が NIGHT_PHASE_START を積む
         }
     }
 }

@@ -27,7 +27,7 @@ import src.common.GamePhase;
 public final class PhaseTheme {
 
     /** 時間帯の区分。 */
-    public enum TimeOfDay { MORNING, DAY, NIGHT, NONE }
+    public enum TimeOfDay { MORNING, DAY, NIGHT, EXECUTE, NONE }
 
     /** フェーズ非依存の既定背景色（画像が無い時間帯）。 */
     public static final Color DEFAULT_BACKGROUND = new Color(0xF2, 0xF2, 0xF2);
@@ -46,6 +46,7 @@ public final class PhaseTheme {
         load(TimeOfDay.MORNING, "status_morning.png");
         load(TimeOfDay.DAY,     "status_day.png");
         load(TimeOfDay.NIGHT,   "status_night.png");
+        load(TimeOfDay.EXECUTE, "execute.png");
     }
 
     private PhaseTheme() {}
@@ -58,6 +59,7 @@ public final class PhaseTheme {
             case MORNING:        return TimeOfDay.MORNING;
             case DAY_DISCUSSION:
             case DAY_VOTE:       return TimeOfDay.DAY;
+            case EXECUTE:        return TimeOfDay.EXECUTE;
             default:             return TimeOfDay.NONE;
         }
     }

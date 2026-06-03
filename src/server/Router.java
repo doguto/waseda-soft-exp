@@ -272,6 +272,19 @@ public class Router {
                     yield null;
                 }
             }
+            case src.message.ExecuteReadyMessage.MessageType -> {
+                try {
+                    src.message.ExecuteReadyMessage msg = mapper.readValue(json, src.message.ExecuteReadyMessage.class);
+                    System.out.println("[INFO] ExecuteReady: roomId=" + msg.roomId + " player=" + msg.playerName);
+                    GameMaster gm = gameMasters.get(msg.roomId);
+                    if (gm != null) new ExecuteReadyService(msg.roomId, gm, broadcaster).call(msg.playerName);
+                    yield null;
+                } catch (Exception e) {
+                    System.out.println("[ERROR] ExecuteReadyService failed: " + e.getMessage());
+                    e.printStackTrace();
+                    yield null;
+                }
+            }
             default -> {
                 System.out.println("[WARN] Unsupported message type: " + type);
                 yield null;

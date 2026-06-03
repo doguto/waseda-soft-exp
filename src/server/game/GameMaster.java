@@ -88,6 +88,10 @@ public class GameMaster {
         return voteRepository.allVoted();
     }
 
+    public boolean allExecuteReady(src.server.database.RoomData room) {
+        return room.executeReadyPlayers.size() >= playerRepository.getPlayerNames().size();
+    }
+
     // ── getters ──────────────────────────────────────────────────────────────
 
     public String getRoomId()               { return roomId; }

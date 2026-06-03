@@ -20,6 +20,7 @@ public class RoomData {
     public volatile String           seerTarget       = null;
     public volatile String           executedPlayerName = null;
     public final KeySetView<String, Boolean> endDiscussionRequests = ConcurrentHashMap.newKeySet();
+    public final KeySetView<String, Boolean> executeReadyPlayers   = ConcurrentHashMap.newKeySet();
     public volatile String           resolvedVoteTarget = null;
 
     public final List<ChatMessage> villageChat = new CopyOnWriteArrayList<>();

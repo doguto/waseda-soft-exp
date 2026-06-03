@@ -10,6 +10,7 @@ public class GameStateManager {
     private int nightCount = 0;
     private final AtomicBoolean voteResolved    = new AtomicBoolean(false);
     private final AtomicBoolean discussionEnded = new AtomicBoolean(false);
+    private final AtomicBoolean nightTriggered  = new AtomicBoolean(false);
 
     private final GameMaster gameMaster;
 
@@ -51,6 +52,12 @@ public class GameStateManager {
     public void resetRoundState() {
         voteResolved.set(false);
         discussionEnded.set(false);
+        nightTriggered.set(false);
+    }
+
+    /** 処刑演出完了後の夜遷移をCASで1回だけ許可する。trueなら呼び出し元がNIGHT_PHASE_STARTを積むべき。 */
+    public boolean markNightTriggered() {
+        return nightTriggered.compareAndSet(false, true);
     }
 
     // Begin a night: increment night count, reset per-round state, and set phase
