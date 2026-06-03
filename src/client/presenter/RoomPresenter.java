@@ -225,6 +225,7 @@ public class RoomPresenter {
 
     public void onAnnounceGameOver(JsonNode node) {
         String winner = node.get("winner").asText();
+        state.winner = winner;
         boolean wolfCampWon = "WOLF".equals(winner);
         log("[ゲーム終了] 勝者: " + (wolfCampWon ? "人狼陣営" : "村人陣営"));
         // 狂人は人狼陣営として勝敗を判定する（Role.isWolfCamp）

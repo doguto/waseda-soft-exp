@@ -2,6 +2,7 @@ package src.client.view;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
 
@@ -21,19 +22,38 @@ public class PhaseOverlay extends JComponent {
         this.durationMillis = durationMillis;
         setOpaque(false);
         setVisible(false);
-        hideTimer = new Timer(durationMillis, e -> setVisible(false));
+        hideTimer = new Timer(durationMillis, e -> dismiss());
         hideTimer.setRepeats(false);
-        // 表示中の操作を吸収（背後へ抜けないようにする）
-        addMouseListener(new MouseAdapter() {});
+        // 表示中の操作を吸収し、クリックされたら閉じる（チャット等の操作へ戻れるようにする）
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dismiss();
+            }
+        });
     }
 
-    /** 指定画像を画面いっぱいに表示し、一定時間後に自動的に消す。 */
+    /** 既定の表示時間で画面いっぱいに表示する。 */
     public void show(BufferedImage img) {
+        show(img, durationMillis);
+    }
+
+    /** 指定画像を画面いっぱいに表示し、指定ミリ秒後（またはクリック時）に消す。 */
+    public void show(BufferedImage img, int millis) {
         if (img == null) return;
         this.image = img;
         setVisible(true);
         repaint();
+        hideTimer.stop();
+        hideTimer.setInitialDelay(millis);
+        hideTimer.setDelay(millis);
         hideTimer.restart();
+    }
+
+    /** オーバーレイを閉じる。 */
+    private void dismiss() {
+        hideTimer.stop();
+        setVisible(false);
     }
 
     @Override
