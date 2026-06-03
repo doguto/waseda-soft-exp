@@ -17,6 +17,9 @@ import src.server.database.repository.PlayerRepository;
 import src.server.database.repository.VoteRepository;
 
 public class GameMaster {
+    /** 朝フェーズ（結果発表）の表示時間(ms)。経過後に昼へ移行する。初日・通常朝で共通。 */
+    public static final long MORNING_PHASE_MILLIS = 5000;
+
     private final String roomId;
     private final BlockingQueue<ServiceType> queue = new LinkedBlockingQueue<>();
     private final GameStateManager stateManager;

@@ -29,6 +29,9 @@ public class InformationPanel extends JPanel implements GameStateListener {
 
         JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 2));
         infoPanel.setBorder(BorderFactory.createTitledBorder("自分の情報"));
+        // 役職名の右側に役職画像の小アイコンを表示する
+        roleLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+        roleLabel.setIconTextGap(6);
         infoPanel.add(nameLabel);
         infoPanel.add(roleLabel);
 
@@ -69,6 +72,8 @@ public class InformationPanel extends JPanel implements GameStateListener {
         phaseImageLabel.setIcon(PhaseTheme.iconFor(state.phase));
         nameLabel.setText("名前: " + (state.myName.isEmpty() ? "-" : state.myName));
         roleLabel.setText("役職: " + (state.myRole == null ? "-" : state.myRole));
+        // 役職画像の小アイコン（画像が未配置なら null＝非表示）
+        roleLabel.setIcon(RoleTheme.iconFor(state.myRole));
         listModel.clear();
         // 生存者を先に表示（players に含まれるが deadPlayers に含まれないもの）
         for (String p : state.players) {

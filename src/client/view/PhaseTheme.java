@@ -38,8 +38,9 @@ public final class PhaseTheme {
     /** 代表色を白に寄せる割合（0.0=そのまま, 1.0=真っ白）。 */
     private static final double LIGHTEN_RATIO = 0.55;
 
-    private static final Map<TimeOfDay, ImageIcon> ICONS  = new EnumMap<>(TimeOfDay.class);
-    private static final Map<TimeOfDay, Color>     COLORS = new EnumMap<>(TimeOfDay.class);
+    private static final Map<TimeOfDay, ImageIcon>     ICONS  = new EnumMap<>(TimeOfDay.class);
+    private static final Map<TimeOfDay, Color>         COLORS = new EnumMap<>(TimeOfDay.class);
+    private static final Map<TimeOfDay, BufferedImage> IMAGES = new EnumMap<>(TimeOfDay.class);
 
     static {
         load(TimeOfDay.MORNING, "status_morning.png");
@@ -69,6 +70,11 @@ public final class PhaseTheme {
     /** フェーズに対応する背景色（無ければ既定色）。 */
     public static Color backgroundFor(GamePhase phase) {
         return COLORS.getOrDefault(timeOfDay(phase), DEFAULT_BACKGROUND);
+    }
+
+    /** フェーズに対応する原寸画像（フルスクリーン表示用、無ければ null）。 */
+    public static BufferedImage rawImageFor(GamePhase phase) {
+        return IMAGES.get(timeOfDay(phase));
     }
 
     /**
@@ -104,6 +110,7 @@ public final class PhaseTheme {
         }
         ICONS.put(tod, scaleIcon(img, ICON_WIDTH));
         COLORS.put(tod, lighten(averageColor(img), LIGHTEN_RATIO));
+        IMAGES.put(tod, img);
     }
 
     /** クラスパス → ファイルパスの順で画像を探して読み込む。 */

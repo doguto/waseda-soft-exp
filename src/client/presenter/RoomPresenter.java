@@ -103,6 +103,7 @@ public class RoomPresenter {
             state.endDiscussionFor = 0;
             state.endDiscussionAlive = alive;
             state.endDiscussionNeed = (alive / 2) + 1;
+            // 初日は朝フェーズを挟まず昼(議論)から開始する
             state.phase = GamePhase.DAY_DISCUSSION;
         } else {
             state.phase = GamePhase.NIGHT;

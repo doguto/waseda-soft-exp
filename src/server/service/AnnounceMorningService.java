@@ -14,9 +14,6 @@ import src.server.game.GameMaster;
 import src.common.GamePhase;
 
 public class AnnounceMorningService extends BaseService implements BroadcastService {
-    /** 朝フェーズ（結果発表）の表示時間。この時間が経過してから昼へ移行する。 */
-    private static final long MORNING_PHASE_MILLIS = 5000;
-
     private final Broadcaster broadcaster;
 
     public AnnounceMorningService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -97,7 +94,7 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
                         : ServiceType.DAY_PHASE_START;
 
         // 朝の発表を一定時間表示してから次フェーズへ移行する（即時遷移しない）
-        gameMaster.scheduleService(nextService, MORNING_PHASE_MILLIS);
+        gameMaster.scheduleService(nextService, GameMaster.MORNING_PHASE_MILLIS);
 
         // 朝になったので前回の議論終了リクエストはリセットしてクライアントへ通知する
         try {

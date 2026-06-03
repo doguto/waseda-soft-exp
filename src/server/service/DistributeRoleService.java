@@ -46,7 +46,7 @@ public class DistributeRoleService extends BaseService implements BroadcastServi
         if (initialStart) {
             // NPC 発見のシステムメッセージを全体に流す
             broadcaster.broadcast(roomId, new src.message.ChatBroadcastMessage("VILLAGE", "[システム]", "NPCが無残な姿で発見されました"));
-            // フェーズを昼(議論)に遷移（GameMaster ヘルパーを使用）
+            // 初日は朝フェーズを挟まずそのまま昼(議論)へ遷移する
             gameMaster.startInitialDay();
         } else {
             gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
