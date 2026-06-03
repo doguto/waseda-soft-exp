@@ -120,7 +120,8 @@ public final class PhaseTheme {
     private static void load(TimeOfDay tod, String fileName) {
         BufferedImage img = readImage(fileName);
         if (img == null) {
-            System.err.println("[PhaseTheme] 画像を読み込めませんでした: " + fileName);
+            // 画像が見つからないのは必ずしも異常ではない（EXECUTE などは未実装の場合がある）
+            // デフォルトで黙ってスキップする。
             return;
         }
         ICONS.put(tod, scaleIcon(img, ICON_WIDTH));

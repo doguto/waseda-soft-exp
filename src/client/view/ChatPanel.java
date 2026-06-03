@@ -17,13 +17,13 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
+// import javax.swing.Box; // not used
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
+// import javax.swing.JScrollBar; // not used
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
@@ -89,6 +89,8 @@ public class ChatPanel extends JPanel implements GameStateListener {
         messageList.setLayout(new BoxLayout(messageList, BoxLayout.Y_AXIS));
         messageList.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
         scrollPane.getViewport().setOpaque(false);
+        // 横スクロールは不要になるように禁止する
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setOpaque(false);
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
@@ -204,14 +206,31 @@ public class ChatPanel extends JPanel implements GameStateListener {
         for (String line : log) {
             addBubbleRow(line);
         }
+
+        // コンテンツ高さを合計して preferredSize に設定することで
+        // ビューポート上での上詰め/下詰め制御が確実になる
+        int totalH = 0;
+        for (int i = 0; i < messageList.getComponentCount(); i++) {
+            java.awt.Component c = messageList.getComponent(i);
+            java.awt.Dimension d = c.getPreferredSize();
+            totalH += d.height;
+        }
+        // 少し余白を加える
+        totalH += 10;
+        // ビューポート幅に合わせて messageList の幅を固定し、横スクロールを不要にする
+        messageList.setPreferredSize(new java.awt.Dimension(Math.max(1, scrollPane.getViewport().getWidth()), Math.max(1, totalH)));
+
         messageList.revalidate();
         messageList.repaint();
         SwingUtilities.invokeLater(() -> {
             // レイアウト反映後にビューポート位置を明示的に設定
-            messageList.revalidate();
-            scrollPane.getViewport().revalidate();
             int contentH = messageList.getPreferredSize().height;
             int viewH = scrollPane.getViewport().getHeight();
+            // ビューポートの実際の表示幅（スクロールバー領域を含まない幅）を使う
+            int vpw = scrollPane.getViewport().getExtentSize().width;
+            if (vpw <= 0) vpw = scrollPane.getViewport().getWidth();
+            // 更新した幅で preferredSize を再設定（縦スクロールが出ても横にはみ出さない）
+            messageList.setPreferredSize(new java.awt.Dimension(Math.max(1, vpw), Math.max(1, messageList.getPreferredSize().height)));
             if (contentH <= viewH) {
                 scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 0)); // 上詰め表示
             } else {
@@ -226,7 +245,7 @@ public class ChatPanel extends JPanel implements GameStateListener {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
         row.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        // 最大サイズは後で決める（preferredHeight に合わせる）
 
         ChatBubble bubble = new ChatBubble(p.body, p.kind);
         switch (p.kind) {
@@ -279,6 +298,9 @@ public class ChatPanel extends JPanel implements GameStateListener {
                 row.add(west, BorderLayout.WEST);
             }
         }
+        // 行の最大高さをその preferredHeight に固定して、
+        // BoxLayout が行を伸ばして中央寄せするのを防ぐ
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
         messageList.add(row);
     }
 
@@ -433,7 +455,6 @@ public class ChatPanel extends JPanel implements GameStateListener {
         private static final int PAD_X = 14;
         private static final int PAD_Y = 9;
         private static final int TAIL = 10;
-        private static final int GAP = 5;
 
         private final String text;
         private final boolean own;
