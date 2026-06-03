@@ -52,6 +52,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
                 case MORNING        -> add(new JLabel("朝（結果発表中）..."));
                 case DAY_DISCUSSION -> buildDiscussionActions();
                 case DAY_VOTE       -> buildVoteActions();
+                case EXECUTE        -> add(new JLabel("処刑結果表示中..."));
                 case NIGHT          -> buildNightActions();
                 default             -> {}
             }
