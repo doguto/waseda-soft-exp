@@ -9,6 +9,7 @@ public class InformationPanel extends JPanel implements GameStateListener {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final JList<String> playerList = new JList<>(listModel);
     private final JLabel phaseLabel = new JLabel("-");
+    private final JLabel phaseImageLabel = new JLabel();
     private final JLabel nameLabel  = new JLabel("名前: -");
     private final JLabel roleLabel  = new JLabel("役職: -");
 
@@ -17,11 +18,14 @@ public class InformationPanel extends JPanel implements GameStateListener {
         setPreferredSize(new Dimension(160, 0));
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
-        JPanel phasePanel = new JPanel(new BorderLayout());
+        JPanel phasePanel = new JPanel(new BorderLayout(0, 2));
         phasePanel.setBorder(BorderFactory.createTitledBorder("フェーズ"));
         phaseLabel.setFont(phaseLabel.getFont().deriveFont(Font.BOLD, 13f));
         phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        phasePanel.add(phaseLabel, BorderLayout.CENTER);
+        // 朝/昼/夜に応じた画像を表示する領域
+        phaseImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        phasePanel.add(phaseImageLabel, BorderLayout.CENTER);
+        phasePanel.add(phaseLabel, BorderLayout.SOUTH);
 
         JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 2));
         infoPanel.setBorder(BorderFactory.createTitledBorder("自分の情報"));
@@ -61,6 +65,8 @@ public class InformationPanel extends JPanel implements GameStateListener {
     @Override
     public void onStateChanged(GameState state) {
         phaseLabel.setText(state.phase.toString());
+        // 朝/昼/夜に対応する画像を表示（対応が無ければ非表示）
+        phaseImageLabel.setIcon(PhaseTheme.iconFor(state.phase));
         nameLabel.setText("名前: " + (state.myName.isEmpty() ? "-" : state.myName));
         roleLabel.setText("役職: " + (state.myRole == null ? "-" : state.myRole));
         listModel.clear();
