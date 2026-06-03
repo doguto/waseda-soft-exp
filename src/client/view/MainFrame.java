@@ -36,6 +36,8 @@ public class MainFrame extends JFrame implements GameStateListener {
         super("人狼ゲーム");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(860, 560);
+        setMinimumSize(new Dimension(760, 500));
+        getContentPane().setBackground(NightVillageTheme.BACKGROUND_BOTTOM);
         setLocationRelativeTo(null);
 
         cards.add(new LobbyPanel(state, room),                   "LOBBY");

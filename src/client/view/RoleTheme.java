@@ -1,6 +1,7 @@
 package src.client.view;
 
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
@@ -26,10 +27,10 @@ import src.common.Role;
 public final class RoleTheme {
 
     /** 役職ラベル横に表示するアイコンの高さ(px)。 */
-    private static final int ICON_HEIGHT = 48;
+    private static final int ICON_HEIGHT = 56;
 
     /** 「自分の情報」欄に大きく表示するアイコンの高さ(px)。 */
-    private static final int INFO_ICON_HEIGHT = 120;
+    private static final int INFO_ICON_HEIGHT = 150;
 
     private static final Map<Role, BufferedImage> IMAGES     = new EnumMap<>(Role.class);
     private static final Map<Role, ImageIcon>     ICONS      = new EnumMap<>(Role.class);
@@ -90,8 +91,34 @@ public final class RoleTheme {
 
     private static ImageIcon scaleIconByHeight(BufferedImage img, int height) {
         int width = Math.max(1, (int) Math.round(height * (double) img.getWidth() / img.getHeight()));
-        Image scaled = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaled);
+        return new ImageIcon(scaleImage(img, width, height));
+    }
+
+    private static BufferedImage scaleImage(BufferedImage source, int targetWidth, int targetHeight) {
+        int currentWidth = source.getWidth();
+        int currentHeight = source.getHeight();
+        BufferedImage current = source;
+
+        while (currentWidth / 2 >= targetWidth && currentHeight / 2 >= targetHeight) {
+            currentWidth /= 2;
+            currentHeight /= 2;
+            current = drawScaled(current, currentWidth, currentHeight);
+        }
+        return drawScaled(current, targetWidth, targetHeight);
+    }
+
+    private static BufferedImage drawScaled(BufferedImage source, int width, int height) {
+        BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = scaled.createGraphics();
+        try {
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.drawImage(source, 0, 0, width, height, null);
+        } finally {
+            g2.dispose();
+        }
+        return scaled;
     }
 
     /**

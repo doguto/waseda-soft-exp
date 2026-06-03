@@ -30,7 +30,7 @@ public final class PhaseTheme {
     public enum TimeOfDay { MORNING, DAY, NIGHT, EXECUTE, NONE }
 
     /** フェーズ非依存の既定背景色（画像が無い時間帯）。 */
-    public static final Color DEFAULT_BACKGROUND = new Color(0xF2, 0xF2, 0xF2);
+    public static final Color DEFAULT_BACKGROUND = NightVillageTheme.BACKGROUND_BOTTOM;
 
     /** フェーズ欄に表示するアイコンの幅(px)。高さは元画像の比率で決まる。 */
     private static final int ICON_WIDTH = 150;
@@ -47,6 +47,11 @@ public final class PhaseTheme {
         load(TimeOfDay.DAY,     "status_day.png");
         load(TimeOfDay.NIGHT,   "status_night.png");
         load(TimeOfDay.EXECUTE, "execute.png");
+        COLORS.put(TimeOfDay.MORNING, new Color(12, 20, 43));
+        COLORS.put(TimeOfDay.DAY, new Color(14, 24, 48));
+        COLORS.put(TimeOfDay.NIGHT, NightVillageTheme.BACKGROUND_BOTTOM);
+        COLORS.put(TimeOfDay.EXECUTE, new Color(31, 12, 20));
+        COLORS.put(TimeOfDay.NONE, NightVillageTheme.BACKGROUND_BOTTOM);
     }
 
     private PhaseTheme() {}
