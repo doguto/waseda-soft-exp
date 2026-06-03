@@ -21,6 +21,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -41,6 +42,9 @@ public class ChatPanel extends JPanel implements GameStateListener {
     private static final Color OWN_BUBBLE = new Color(125, 19, 30, 238);
     private static final Color OWN_TEXT = new Color(255, 238, 177);
     private static final Color SYSTEM_BUBBLE = new Color(7, 10, 20, 206);
+    private static final Color SELF_BUBBLE = new Color(26, 36, 72, 236);
+    private static final Color SELF_TEXT = new Color(198, 216, 255);
+    private static final Color SELF_BORDER = new Color(120, 150, 220);
     private static final BufferedImage DAY_BACKGROUND =
         NightVillageTheme.readImage("day_village_background.png");
     private static final BufferedImage NIGHT_BACKGROUND =
@@ -198,65 +202,172 @@ public class ChatPanel extends JPanel implements GameStateListener {
         }
 
         for (String line : log) {
-            addBubbleRow(line, isOwnMessage(line), isSystemMessage(line));
+            addBubbleRow(line);
         }
-        messageList.add(Box.createVerticalGlue());
         messageList.revalidate();
         messageList.repaint();
         SwingUtilities.invokeLater(() -> {
-            JScrollBar bar = scrollPane.getVerticalScrollBar();
-            bar.setValue(bar.getMaximum());
+            // レイアウト反映後にビューポート位置を明示的に設定
+            messageList.revalidate();
+            scrollPane.getViewport().revalidate();
+            int contentH = messageList.getPreferredSize().height;
+            int viewH = scrollPane.getViewport().getHeight();
+            if (contentH <= viewH) {
+                scrollPane.getViewport().setViewPosition(new java.awt.Point(0, 0)); // 上詰め表示
+            } else {
+                scrollPane.getViewport().setViewPosition(new java.awt.Point(0, Math.max(0, contentH - viewH))); // 下にスクロール
+            }
         });
     }
 
-    private void addBubbleRow(String line, boolean own, boolean system) {
+    private void addBubbleRow(String line) {
+        Parsed p = parse(line);
+
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
         row.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-        ChatBubble bubble = new ChatBubble(line, own, system);
-        if (system) {
-            JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-            center.setOpaque(false);
-            center.add(bubble);
-            row.add(center, BorderLayout.CENTER);
-        } else {
-            row.add(bubble, own ? BorderLayout.EAST : BorderLayout.WEST);
+        ChatBubble bubble = new ChatBubble(p.body, p.kind);
+        switch (p.kind) {
+            case SYSTEM -> {
+                if (p.body != null && p.body.startsWith("[投票]")) {
+                    JPanel west = new JPanel();
+                    west.setOpaque(false);
+                    west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
+                    west.add(bubble);
+                    row.add(west, BorderLayout.WEST);
+                } else {
+                    JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+                    center.setOpaque(false);
+                    center.add(bubble);
+                    row.add(center, BorderLayout.CENTER);
+                }
+            }
+            case OWN -> // 自分の発言は右寄せ・名前なし（LINE風）
+                row.add(bubble, BorderLayout.EAST);
+            case SELF -> {
+                // 自分宛ての通知は左寄せ・専用スタイル（「あなたへの通知」を上に表示）
+                JPanel west = new JPanel();
+                west.setOpaque(false);
+                west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
+                JLabel tag = new JLabel("あなたへの通知");
+                tag.setForeground(SELF_BORDER);
+                tag.setFont(new Font("Yu Gothic UI", Font.PLAIN, 11));
+                tag.setBorder(BorderFactory.createEmptyBorder(0, 6, 2, 0));
+                tag.setAlignmentX(0f);
+                bubble.setAlignmentX(0f);
+                west.add(tag);
+                west.add(bubble);
+                row.add(west, BorderLayout.WEST);
+            }
+            default -> {
+                // 他プレイヤーの発言は左寄せ・吹き出しの上に送信者名を小さく表示
+                JPanel west = new JPanel();
+                west.setOpaque(false);
+                west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
+                if (p.sender != null && !p.sender.isEmpty()) {
+                    JLabel name = new JLabel(p.sender);
+                    name.setForeground(NightVillageTheme.MUTED_TEXT);
+                    name.setFont(new Font("Yu Gothic UI", Font.BOLD, 16));
+                    name.setBorder(BorderFactory.createEmptyBorder(0, 6, 2, 0));
+                    name.setAlignmentX(0f);
+                    west.add(name);
+                }
+                bubble.setAlignmentX(0f);
+                west.add(bubble);
+                row.add(west, BorderLayout.WEST);
+            }
         }
         messageList.add(row);
     }
 
-    private boolean isOwnMessage(String line) {
-        if (currentState == null || currentState.myName == null || currentState.myName.isBlank() || line == null) {
-            return false;
+    /** チャットの1行を「自分/他者/システム」と本文・送信者に分解する。 */
+    private Parsed parse(String line) {
+        String channel = null;
+        String sender = null;
+        String body = null;
+        if (line != null && line.startsWith("【") && line.indexOf('】') > 0) {
+            int end = line.indexOf('】');
+            channel = line.substring(1, end);
+            int colon = line.indexOf(':', end);
+            if (colon < 0) colon = line.indexOf('：', end);
+            if (colon != -1) {
+                sender = line.substring(end + 1, colon).trim();
+                body = line.substring(colon + 1).trim();
+            } else {
+                body = line.substring(end + 1).trim();
+            }
+        } else {
+            body = line;
         }
-        String sender = extractSender(line);
-        if (sender != null) {
-            return sender.equals(currentState.myName);
+
+        boolean player = sender != null && !sender.isEmpty()
+                && isPlayerChannel(channel) && isRealSender(sender);
+        if (player) {
+            boolean own = currentState != null && currentState.myName != null
+                    && sender.equals(currentState.myName);
+            return new Parsed(own ? Kind.OWN : Kind.OTHER, sender, body);
         }
-        return line.contains(currentState.myName + ":") || line.contains(currentState.myName + "：");
+        Kind kind = isSelfNotice(line) ? Kind.SELF : Kind.SYSTEM;
+        return new Parsed(kind, null, systemDisplayText(line));
     }
 
-    private boolean isSystemMessage(String line) {
+    /** 自分にだけ届く通知か（占い/霊媒結果・自分の夜行動・勝敗・エラー）。 */
+    private static boolean isSelfNotice(String line) {
         if (line == null) return false;
-        String sender = extractSender(line);
-        if (sender != null) {
-            return sender.equalsIgnoreCase("SYSTEM")
-                || sender.equalsIgnoreCase("System")
-                || sender.contains("システム");
-        }
-        return line.startsWith("[") || line.startsWith("【");
+        return line.startsWith("[占い結果]")
+            || line.startsWith("[霊媒結果]")
+            || line.startsWith("[夜]")
+            || line.startsWith("[結果]")
+            || line.startsWith("[エラー]");
     }
 
-    private String extractSender(String line) {
-        if (line == null) return null;
-        int start = Math.max(line.lastIndexOf('】'), line.lastIndexOf(']'));
-        int colon = line.indexOf(':', start + 1);
-        if (colon < 0) colon = line.indexOf('：', start + 1);
-        if (colon < 0) return null;
-        String sender = line.substring(Math.max(0, start + 1), colon).trim();
-        return sender.isEmpty() ? null : sender;
+    /** プレイヤー間チャットのチャンネルか（全体/人狼/墓地）。 */
+    private static boolean isPlayerChannel(String channel) {
+        return "全体".equals(channel) || "人狼".equals(channel) || "墓地".equals(channel);
+    }
+
+    /** 実プレイヤーの送信者か（'[' 始まりのラベルや システム/NPC は除外）。 */
+    private static boolean isRealSender(String sender) {
+        if (sender == null || sender.isBlank()) return false;
+        if (sender.startsWith("[")) return false;
+        if ("システム".equals(sender) || "SYSTEM".equalsIgnoreCase(sender) || "System".equals(sender)) return false;
+        if ("NPC".equalsIgnoreCase(sender)) return false;
+        return true;
+    }
+
+    /** システム通知として中央表示する本文（冗長な【全体】【システム】[システム]等のラベルを除去）。 */
+    private static String systemDisplayText(String line) {
+        if (line == null) return "";
+        if (line.startsWith("【システム】")) return line.substring("【システム】".length()).trim();
+        if (line.startsWith("[システム]")) return line.substring("[システム]".length()).trim();
+        // 「【全体】[朝]: 本文」のように 【…】送信者: が付く形式は本文だけを残す
+        if (line.startsWith("【")) {
+            int end = line.indexOf('】');
+            if (end >= 0) {
+                int colon = line.indexOf(':', end);
+                if (colon < 0) colon = line.indexOf('：', end);
+                if (colon != -1) return line.substring(colon + 1).trim();
+                return line.substring(end + 1).trim();
+            }
+        }
+        // [投票]/[処刑]/[夜]/[占い結果] などはラベル付きのまま表示（情報として有用）
+        return line;
+    }
+
+    private enum Kind { OWN, OTHER, SYSTEM, SELF }
+
+    private static final class Parsed {
+        final Kind kind;
+        final String sender;
+        final String body;
+
+        Parsed(Kind kind, String sender, String body) {
+            this.kind = kind;
+            this.sender = sender;
+            this.body = body;
+        }
     }
 
     private void updateSendable() {
@@ -327,11 +438,15 @@ public class ChatPanel extends JPanel implements GameStateListener {
         private final String text;
         private final boolean own;
         private final boolean system;
+        private final boolean self;
+        private final boolean noTail; // テール（吹き出しの尾）を描かない＝中央/自分宛て通知
 
-        ChatBubble(String text, boolean own, boolean system) {
+        ChatBubble(String text, Kind kind) {
             this.text = text == null ? "" : text;
-            this.own = own;
-            this.system = system;
+            this.own = kind == Kind.OWN;
+            this.system = kind == Kind.SYSTEM;
+            this.self = kind == Kind.SELF;
+            this.noTail = this.system || this.self;
             setOpaque(false);
             setFont(new Font("Yu Gothic UI", Font.BOLD, 13));
             setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -346,9 +461,15 @@ public class ChatPanel extends JPanel implements GameStateListener {
             for (String line : lines) {
                 width = Math.max(width, fm.stringWidth(line));
             }
-            width += PAD_X * 2 + (system ? 0 : TAIL);
+            width += PAD_X * 2 + (noTail ? 0 : TAIL);
             int height = Math.max(1, lines.size()) * fm.getHeight() + PAD_Y * 2;
             return new Dimension(width, height);
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            // 内容ぶんだけのサイズに固定し、レイアウトで不必要に拡大されないようにする
+            return getPreferredSize();
         }
 
         @Override
@@ -358,16 +479,16 @@ public class ChatPanel extends JPanel implements GameStateListener {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 FontMetrics fm = g2.getFontMetrics(getFont());
                 List<String> lines = wrapLines(fm, maxTextWidth());
-                Color bubbleColor = system ? SYSTEM_BUBBLE : (own ? OWN_BUBBLE : OTHER_BUBBLE);
-                Color borderColor = system ? NightVillageTheme.GOLD_DARK : NightVillageTheme.GOLD;
-                Color textColor = system ? NightVillageTheme.GOLD_LIGHT : (own ? OWN_TEXT : OTHER_TEXT);
+                Color bubbleColor = system ? SYSTEM_BUBBLE : self ? SELF_BUBBLE : (own ? OWN_BUBBLE : OTHER_BUBBLE);
+                Color borderColor = system ? NightVillageTheme.GOLD_DARK : self ? SELF_BORDER : NightVillageTheme.GOLD;
+                Color textColor = system ? NightVillageTheme.GOLD_LIGHT : self ? SELF_TEXT : (own ? OWN_TEXT : OTHER_TEXT);
 
-                int bubbleX = own || system ? 0 : TAIL;
-                int bubbleW = getWidth() - (system ? 0 : TAIL);
+                int bubbleX = (!noTail && !own) ? TAIL : 0;
+                int bubbleW = getWidth() - (noTail ? 0 : TAIL);
                 int bubbleH = getHeight();
                 g2.setColor(bubbleColor);
                 g2.fillRoundRect(bubbleX, 0, bubbleW - 1, bubbleH - 1, ARC, ARC);
-                if (!system) {
+                if (!noTail) {
                     Polygon tail = new Polygon();
                     int mid = Math.min(bubbleH - 12, 22);
                     if (own) {
@@ -400,7 +521,7 @@ public class ChatPanel extends JPanel implements GameStateListener {
         private int maxTextWidth() {
             int viewportWidth = scrollPane.getViewport().getWidth();
             int baseWidth = viewportWidth > 0 ? viewportWidth : 720;
-            double ratio = system ? 0.72 : 0.58;
+            double ratio = system ? 0.72 : self ? 0.62 : 0.58;
             return Math.max(180, Math.min(560, (int) (baseWidth * ratio)));
         }
 
