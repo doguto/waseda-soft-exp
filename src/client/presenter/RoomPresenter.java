@@ -9,9 +9,14 @@ import src.common.Role;
 import src.client.state.GameState;
 import src.message.*;
 
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import java.util.concurrent.CompletableFuture;
 
 public class RoomPresenter {
+    /** 処刑演出の表示時間(ms)。この時間後にサーバーへ完了通知を送る。 */
+    public static final int EXECUTE_OVERLAY_MILLIS = 4000;
+
     private final GameState state;
     private final GameSession session;
     private MessageDispatcher dispatcher;
@@ -206,22 +211,29 @@ public class RoomPresenter {
 
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
-        // 処刑時に役職は公開しない（役職は霊媒結果やゲーム終了時のみ判明する）
         if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
         }
         if (!state.lastVoteTieCandidates.isEmpty()) {
-            // 同票で抽選が入った場合は抽選結果という表現にする
             log("[システム] 抽選の結果、[" + executed + "] が処刑されました。");
-            // リセット
             state.lastVoteTieCandidates.clear();
             state.lastVoteTopCount = 0;
         } else {
             log("[処刑] " + executed + " が処刑されました");
         }
-        state.phase = GamePhase.NIGHT;
+        state.phase = GamePhase.EXECUTE;
         state.notifyListeners();
+        // EDT上でタイマーを起動し、演出時間後にサーバーへ完了通知を送る
+        SwingUtilities.invokeLater(() -> {
+            Timer t = new Timer(EXECUTE_OVERLAY_MILLIS, e -> sendExecuteReady());
+            t.setRepeats(false);
+            t.start();
+        });
+    }
+
+    private void sendExecuteReady() {
+        session.send(new ExecuteReadyMessage(state.roomId, state.myName));
     }
 
     public void onAnnounceGameOver(JsonNode node) {
