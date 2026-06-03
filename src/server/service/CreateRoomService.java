@@ -11,20 +11,16 @@ public class CreateRoomService extends BaseService {
     }
 
     public CreateRoomResultMessage call(CreateRoomMessage msg) {
-        // RoomRepository.create(roomId) でルームを作成する
-        // RoomRepository.addPlayer(roomId, new Player(msg.playerName)) でホストを登録する
-        // 成功/失敗を CreateRoomResultMessage に設定して返す
         boolean success = roomRepository.create(roomId);
         String message;
         if (success) {
             success = roomRepository.addPlayer(roomId, new Player(msg.name));
-            // 作成者をホストとして記録
             roomRepository.setHost(roomId, msg.name);
             message = "SUCCESS : The room has been successfully created.\n"
                     + "Room ID : " + roomId + "\n"
                     + "Player Name :" + msg.name;
         } else {
-            message = "ERROR : The Room ID has already been used.";
+            message = "そのルームIDはすでに使われています。別のルームIDを入力してください。";
         }
         return new CreateRoomResultMessage(success, message);
     }
