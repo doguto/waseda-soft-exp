@@ -29,7 +29,9 @@ public class ActionPanel extends JPanel implements GameStateListener {
         this.noonPresenter  = noonPresenter;
         this.nightPresenter = nightPresenter;
         setLayout(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        setOpaque(false);
+        setOpaque(true);
+        setBackground(new Color(11, 18, 38));
+        putClientProperty("noPhaseTheme", Boolean.TRUE);
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
             BorderFactory.createEmptyBorder(8, 10, 8, 10)

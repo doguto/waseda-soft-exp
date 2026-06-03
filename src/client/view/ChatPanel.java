@@ -35,6 +35,9 @@ public class ChatPanel extends JPanel implements GameStateListener {
         this.chatPresenter = chatPresenter;
         this.currentState  = state;
         setLayout(new BorderLayout());
+        setOpaque(true);
+        setBackground(new Color(11, 18, 38));
+        putClientProperty("noPhaseTheme", Boolean.TRUE);
 
         JPanel tabPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         tabPanel.setOpaque(false);

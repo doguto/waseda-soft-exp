@@ -31,7 +31,9 @@ public class InformationPanel extends JPanel implements GameStateListener {
         setLayout(new BorderLayout(0, 4));
         setPreferredSize(new Dimension(180, 0));
         setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        setOpaque(false);
+        setOpaque(true);
+        setBackground(new Color(11, 18, 38));
+        putClientProperty("noPhaseTheme", Boolean.TRUE);
 
         JPanel phasePanel = new JPanel(new BorderLayout(0, 2));
         phasePanel.setOpaque(false);
