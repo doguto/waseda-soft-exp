@@ -1,6 +1,7 @@
 package src.client.view;
 
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.util.List;
 import javax.swing.*;
 import src.client.presenter.ChatPresenter;
@@ -10,12 +11,14 @@ import src.common.GamePhase;
 import src.common.Role;
 
 public class ChatPanel extends JPanel implements GameStateListener {
-    private static final Color PANEL_BG = new Color(11, 18, 38, 220);
-    private static final Color BORDER_COLOR = new Color(92, 111, 160);
-    private static final Color TEXT_COLOR = new Color(230, 236, 250);
-    private static final Color BUTTON_BG = new Color(27, 38, 70);
-    private static final Color TEXT_AREA_BG = new Color(5, 10, 24);
-    private static final Color TEXT_AREA_FG = new Color(214, 226, 255);
+    private static final Color PANEL_BG        = new Color(11, 18, 38, 220);
+    private static final Color BORDER_COLOR    = new Color(92, 111, 160);
+    private static final Color TEXT_COLOR      = new Color(230, 236, 250);
+    private static final Color BUTTON_BG       = new Color(27, 38, 70);
+    private static final Color SELECTED_TAB_BG = new Color(55, 78, 145);
+    private static final Color ACCENT_COLOR    = new Color(120, 155, 230);
+    private static final Color TEXT_AREA_BG    = new Color(10, 16, 36);
+    private static final Color TEXT_AREA_FG    = new Color(220, 232, 255);
 
     private final ChatPresenter chatPresenter;
     private final JTextArea logArea     = new JTextArea();
@@ -32,6 +35,9 @@ public class ChatPanel extends JPanel implements GameStateListener {
         this.chatPresenter = chatPresenter;
         this.currentState  = state;
         setLayout(new BorderLayout());
+        setOpaque(true);
+        setBackground(new Color(11, 18, 38));
+        putClientProperty("noPhaseTheme", Boolean.TRUE);
 
         JPanel tabPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         tabPanel.setOpaque(false);
@@ -51,11 +57,11 @@ public class ChatPanel extends JPanel implements GameStateListener {
         logArea.setEditable(false);
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
-        logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        logArea.setFont(new Font("Yu Gothic UI", Font.PLAIN, 13));
         logArea.setBackground(TEXT_AREA_BG);
         logArea.setForeground(TEXT_AREA_FG);
         logArea.setCaretColor(TEXT_AREA_FG);
-        logArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        logArea.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JScrollPane scroll = new JScrollPane(logArea);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
@@ -80,17 +86,40 @@ public class ChatPanel extends JPanel implements GameStateListener {
         graveTabBtn.addActionListener(e -> { refreshLog(currentState); updateSendable(); });
         sendButton.addActionListener(e -> sendChat());
         inputField.addActionListener(e -> sendChat());
+        updateTabColors();
     }
 
     private void styleTab(JToggleButton button) {
         button.setFocusPainted(false);
         button.setBackground(BUTTON_BG);
         button.setForeground(TEXT_COLOR);
+        button.setFont(button.getFont().deriveFont(Font.BOLD, 12f));
         button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(5, 12, 5, 12),
+            BorderFactory.createEmptyBorder(6, 14, 6, 14),
             BorderFactory.createLineBorder(BORDER_COLOR, 1, true)
         ));
         button.setOpaque(true);
+        button.addItemListener(e -> updateTabColors());
+    }
+
+    private void updateTabColors() {
+        for (JToggleButton tab : new JToggleButton[]{villageTabBtn, wolfTabBtn, graveTabBtn}) {
+            if (tab.isSelected()) {
+                tab.setBackground(SELECTED_TAB_BG);
+                tab.setForeground(Color.WHITE);
+                tab.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createEmptyBorder(6, 14, 6, 14),
+                    BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT_COLOR)
+                ));
+            } else {
+                tab.setBackground(BUTTON_BG);
+                tab.setForeground(TEXT_COLOR);
+                tab.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createEmptyBorder(6, 14, 6, 14),
+                    BorderFactory.createLineBorder(BORDER_COLOR, 1, true)
+                ));
+            }
+        }
     }
 
     private void styleButton(JButton button) {
