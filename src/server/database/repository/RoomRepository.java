@@ -27,6 +27,22 @@ public class RoomRepository {
         room.players.add(player);
         return true;
     }
+    public boolean removePlayer(String roomId, String playerName) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return false;
+        return room.players.removeIf(player -> player.name.equals(playerName));
+    }
+    public void setHost(String roomId, String hostName) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return;
+        room.hostName = hostName;
+    }
+
+    public String getHost(String roomId) {
+        RoomData room = db.getRoom(roomId);
+        if (room == null) return null;
+        return room.hostName;
+    }
 
     public List<Player> getPlayers(String roomId) {
         RoomData room = db.getRoom(roomId);
@@ -36,5 +52,23 @@ public class RoomRepository {
 
     public boolean canStart(String roomId) {
         return getPlayers(roomId).size() >= 4;
+    }
+
+    public boolean addEndDiscussionRequest(String roomId, String playerName) {
+        var room = db.getRoom(roomId);
+        if (room == null) return false;
+        return room.endDiscussionRequests.add(playerName);
+    }
+
+    public int countEndDiscussionRequests(String roomId) {
+        var room = db.getRoom(roomId);
+        if (room == null) return 0;
+        return room.endDiscussionRequests.size();
+    }
+
+    public void clearEndDiscussionRequests(String roomId) {
+        var room = db.getRoom(roomId);
+        if (room == null) return;
+        room.endDiscussionRequests.clear();
     }
 }

@@ -52,4 +52,17 @@ public class GameStateManager {
         voteResolved.set(false);
         discussionEnded.set(false);
     }
+
+    // Begin a night: increment night count, reset per-round state, and set phase
+    public void beginNight() {
+        incrementNight();
+        resetRoundState();
+        setPhase(src.common.GamePhase.NIGHT);
+    }
+
+    // Begin day discussion: reset per-round state and set phase
+    public void beginDayDiscussion() {
+        resetRoundState();
+        setPhase(src.common.GamePhase.DAY_DISCUSSION);
+    }
 }

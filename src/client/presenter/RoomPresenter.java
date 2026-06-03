@@ -49,15 +49,18 @@ public class RoomPresenter {
 
             return session.sendRequest(msg, responseType)
                 .thenApply(node -> {
-                    if (node.get("success").asBoolean()) {
-                        state.players.add(state.myName);
-                        state.phase = GamePhase.WAITING;
-                        log("[システム] ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
+                    boolean success = node.get("success").asBoolean();
+                    if (success) {
+                        // 即時に自分をローカルリストへ追加する（フェーズはサーバーの RoomSnapshot を待つ）
+                        if (!state.players.contains(state.myName)) state.players.add(state.myName);
+                        log("【システム】ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
+                        state.notifyListeners();
+                        return true;
                     } else {
-                        log("[エラー] " + node.get("message").asText());
+                        // サーバー側のエラーメッセージを例外として伝播させ、LobbyPanel 側で表示させる
+                        String msgText = node.has("message") ? node.get("message").asText() : "ルーム参加に失敗しました";
+                        throw new RuntimeException(msgText);
                     }
-                    state.notifyListeners();
-                    return node.get("success").asBoolean();
                 });
         } catch (Exception e) {
             CompletableFuture<Boolean> failed = new CompletableFuture<>();
@@ -85,9 +88,43 @@ public class RoomPresenter {
 
     public void onDistributeRole(JsonNode node) {
         state.myRole = Role.valueOf(node.get("role").asText());
+        state.players.clear();
+        state.deadPlayers.clear();
+        JsonNode playersNode = node.get("player_names");
+        if (playersNode != null && playersNode.isArray()) {
+            for (JsonNode playerNode : playersNode) {
+                state.players.add(playerNode.asText());
+            }
+        }
+        // サーバーが初日の配役時に昼へ遷移させる場合は DistributeRoleMessage.startDay が true になる
+        JsonNode startDayNode = node.get("startDay");
+        if (startDayNode != null && startDayNode.asBoolean(false)) {
+            int alive = state.players.size();
+            state.endDiscussionFor = 0;
+            state.endDiscussionAlive = alive;
+            state.endDiscussionNeed = (alive / 2) + 1;
+            state.phase = GamePhase.DAY_DISCUSSION;
+        } else {
+            state.phase = GamePhase.NIGHT;
+        }
+        // 初期フラグをリセット
+        state.hasVoted = false;
+        state.hasNightActionSent = false;
+        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole + "】 です。");
+        state.notifyListeners();
+    }
+
+    public void onNightPhaseStart(JsonNode node) {
         state.phase = GamePhase.NIGHT;
-        state.isAlive = true;
-        log("[システム] ゲーム開始！ あなたの役職: 【" + state.myRole + "】");
+        state.hasNightActionSent = false;
+        log("【システム】夜になりました。");
+        state.notifyListeners();
+    }
+
+    public void onVotePhaseStart(JsonNode node) {
+        state.phase = GamePhase.DAY_VOTE;
+        state.hasVoted = false;
+        log("【システム】投票が始まりました。");
         state.notifyListeners();
     }
 
@@ -95,26 +132,107 @@ public class RoomPresenter {
         JsonNode deadNode = node.get("deadPlayerName");
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
+<<<<<<< HEAD
             if (dead.equals(state.myName)) {
                 state.isAlive = false;
             }
             state.players.remove(dead);
             log("[朝] " + dead + " が死亡しました...");
+=======
+            if (!state.deadPlayers.contains(dead)) state.deadPlayers.add(dead);
+            if (dead.equals(state.myName)) {
+                state.isAlive = false;
+            }
+            log("【システム】朝になりました。死体が見つかりました: " + dead + "。");
+>>>>>>> origin/main
         } else {
-            log("[朝] 誰も死亡しませんでした（守護成功）");
+            log("【システム】朝になりました。死体はありませんでした。");
         }
         state.phase = GamePhase.DAY_DISCUSSION;
+        state.notifyListeners();
+    }
+
+    public void onRoomSnapshot(JsonNode node) {
+        // players
+        state.players.clear();
+        JsonNode playersNode = node.get("players");
+        if (playersNode != null && playersNode.isArray()) {
+            for (JsonNode p : playersNode) state.players.add(p.asText());
+        }
+        // deadPlayers
+        state.deadPlayers.clear();
+        JsonNode deadNode = node.get("deadPlayers");
+        if (deadNode != null && deadNode.isArray()) {
+            for (JsonNode d : deadNode) state.deadPlayers.add(d.asText());
+        }
+        // role & alive
+        if (node.has("myRole") && !node.get("myRole").isNull()) {
+            state.myRole = src.common.Role.valueOf(node.get("myRole").asText());
+        }
+        if (node.has("isAlive")) state.isAlive = node.get("isAlive").asBoolean();
+        // phase
+        if (node.has("phase")) state.phase = src.common.GamePhase.valueOf(node.get("phase").asText());
+        if (node.has("endDiscussionFor")) state.endDiscussionFor = node.get("endDiscussionFor").asInt();
+        if (node.has("endDiscussionNeed")) state.endDiscussionNeed = node.get("endDiscussionNeed").asInt();
+        if (node.has("endDiscussionAlive")) state.endDiscussionAlive = node.get("endDiscussionAlive").asInt();
+        if (node.has("hasVoted")) state.hasVoted = node.get("hasVoted").asBoolean();
+        if (node.has("hasNightActionSent")) state.hasNightActionSent = node.get("hasNightActionSent").asBoolean();
+
+        // chat logs
+        state.chatLog.clear(); state.wolfChatLog.clear(); state.graveChatLog.clear();
+        JsonNode v = node.get("villageChat");
+        if (v != null && v.isArray()) for (JsonNode c : v) state.chatLog.add(c.asText());
+        JsonNode w = node.get("wolfChat");
+        if (w != null && w.isArray()) for (JsonNode c : w) state.wolfChatLog.add(c.asText());
+        JsonNode g = node.get("graveChat");
+        if (g != null && g.isArray()) for (JsonNode c : g) state.graveChatLog.add(c.asText());
+
+        log("【システム】ルーム状態を復元しました");
+        state.notifyListeners();
+    }
+    public void onDayPhaseStart(JsonNode node) {
+        // 明示的な昼開始メッセージを受け取ったらクライアントを昼フェーズに設定
+        JsonNode votesForNode = node.get("votesFor");
+        JsonNode aliveCountNode = node.get("aliveCount");
+        JsonNode needNode = node.get("need");
+        if (votesForNode != null) {
+            state.endDiscussionFor = votesForNode.asInt();
+        }
+        if (aliveCountNode != null) {
+            state.endDiscussionAlive = aliveCountNode.asInt();
+        }
+        if (needNode != null) {
+            state.endDiscussionNeed = needNode.asInt();
+        }
+        state.phase = GamePhase.DAY_DISCUSSION;
+        log("[システム] 昼フェーズ（議論）が開始しました");
         state.notifyListeners();
     }
 
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
         String role = node.get("executedRole").asText();
+<<<<<<< HEAD
         if (executed.equals(state.myName)) {
             state.isAlive = false;
         }
         state.players.remove(executed);
         log("[処刑] " + executed + "（" + role + "）が処刑されました");
+=======
+        if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
+        if (executed.equals(state.myName)) {
+            state.isAlive = false;
+        }
+        if (!state.lastVoteTieCandidates.isEmpty()) {
+            // 同票で抽選が入った場合は抽選結果という表現にする
+            log("[システム] 抽選の結果、[" + executed + "] が処刑されました。");
+            // リセット
+            state.lastVoteTieCandidates.clear();
+            state.lastVoteTopCount = 0;
+        } else {
+            log("[処刑] " + executed + "（" + role + "）が処刑されました");
+        }
+>>>>>>> origin/main
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();
     }

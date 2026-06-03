@@ -20,9 +20,27 @@ public class VoteRepository {
         this.roomId = roomId;
     }
 
+    public void setResolvedTarget(String targetName) {
+        RoomData room = db.getRoom(roomId);
+        if (room != null) room.resolvedVoteTarget = targetName;
+    }
+
+    public Optional<String> getResolvedTarget() {
+        RoomData room = db.getRoom(roomId);
+        return room != null ? Optional.ofNullable(room.resolvedVoteTarget) : Optional.empty();
+    }
+
     public void save(String playerName, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.votes.put(playerName, targetName);
+        if (room != null) {
+            // 同一プレイヤーの再投票は無視する
+            room.votes.putIfAbsent(playerName, targetName);
+        }
+    }
+
+    public boolean hasVoteFrom(String playerName) {
+        RoomData room = db.getRoom(roomId);
+        return room != null && room.votes.containsKey(playerName);
     }
 
     public boolean allVoted() {

@@ -50,7 +50,15 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         AnnounceMorningMessage announceMsg = new AnnounceMorningMessage();
         announceMsg.deadPlayerName = deadPlayerName;
 
-        broadcaster.broadcastAlive(roomId, announceMsg);
+        broadcaster.broadcast(roomId, announceMsg);
+        // 朝の統一表現として「死体報告」を全体チャットにも流す
+        String reportText;
+        if (deadPlayerName != null) {
+            reportText = "死体報告: " + deadPlayerName + " が発見されました";
+        } else {
+            reportText = "死体報告: 誰も死なず";
+        }
+        broadcaster.broadcast(roomId, new src.message.ChatBroadcastMessage("VILLAGE", "[朝]", reportText));
 
         // 5. 占い師に占い結果を通知する
         Optional<String> seerTargetOpt = gameMaster.nightActionRepository.getSeerTarget();
@@ -80,7 +88,18 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
         if (gameMaster.playerRepository.wolvesWin() || gameMaster.playerRepository.villagersWin()) {
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
-            gameMaster.getStateManager().setPhase(GamePhase.DAY_DISCUSSION);
+            // 朝の発表が終わったら明示的な昼開始サービスをキューに積む
+            gameMaster.pushService(ServiceType.DAY_PHASE_START);
+        }
+
+        // 朝になったので前回の議論終了リクエストはリセットしてクライアントへ通知する
+        try {
+            int alive = gameMaster.playerRepository.getAlivePlayers().size();
+            int need = (alive / 2) + 1;
+            roomRepository.clearEndDiscussionRequests(roomId);
+            broadcaster.broadcast(roomId, new src.message.EndDiscussionStatusMessage(0, alive, need));
+        } catch (Exception e) {
+            // ignore
         }
 
         // 8. 夜行動をリセットする（lastKnightTarget を保存してからリセット）

@@ -40,13 +40,18 @@ public class ActionPanel extends JPanel implements GameStateListener {
     @Override
     public void onStateChanged(GameState state) {
         removeAll();
-        switch (state.phase) {
-            case WAITING        -> buildWaitingActions();
-            case DAY_DISCUSSION -> buildDiscussionActions();
-            case DAY_VOTE       -> buildVoteActions();
-            case NIGHT          -> buildNightActions();
-            case GAME_OVER      -> add(new JLabel("ゲーム終了"));
-            default             -> {}
+        if (state.phase == src.common.GamePhase.GAME_OVER) {
+            add(new JLabel("ゲーム終了"));
+        } else if (!state.isAlive) {
+            add(new JLabel("死亡中（墓場チャットのみ可）"));
+        } else {
+            switch (state.phase) {
+                case WAITING        -> buildWaitingActions();
+                case DAY_DISCUSSION -> buildDiscussionActions();
+                case DAY_VOTE       -> buildVoteActions();
+                case NIGHT          -> buildNightActions();
+                default             -> {}
+            }
         }
         for (Component component : getComponents()) {
             if (component instanceof JComponent jc) {
@@ -70,12 +75,29 @@ public class ActionPanel extends JPanel implements GameStateListener {
         endBtn.addActionListener(e -> noonPresenter.requestEndDiscussion());
         styleButton(endBtn);
         add(endBtn);
+
+        // 賛成数表示: 表示は "x / 生きている人数（過半数まであと remaining）"
+        int forCount = state.endDiscussionFor;
+        int alive = state.endDiscussionAlive > 0 ? state.endDiscussionAlive : state.players.size();
+        int need = state.endDiscussionNeed;
+        int remaining = Math.max(0, need - forCount);
+        String label = forCount + " / " + alive + "（過半数まであと " + remaining + "）";
+        add(new JLabel(label));
     }
 
     private void buildVoteActions() {
+        if (state.hasVoted) {
+            add(new JLabel("投票済み"));
+            return;
+        }
         String[] candidates = state.players.stream()
             .filter(p -> !p.equals(state.myName))
+            .filter(p -> !state.deadPlayers.contains(p))
             .toArray(String[]::new);
+        if (candidates.length == 0) {
+            add(new JLabel("投票先がありません"));
+            return;
+        }
         JComboBox<String> box = new JComboBox<>(candidates);
         JButton voteBtn = new JButton("投票");
         voteBtn.addActionListener(e -> {
@@ -95,6 +117,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildWolfActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("襲撃済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("襲撃");
         btn.addActionListener(e -> {
@@ -107,6 +133,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildSeerActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("占い済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("占い");
         btn.addActionListener(e -> {
@@ -119,6 +149,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildKnightActions() {
+        if (state.hasNightActionSent) {
+            add(new JLabel("守護済み"));
+            return;
+        }
         JComboBox<String> box = targetBox();
         JButton btn = new JButton("守護");
         btn.addActionListener(e -> {
@@ -133,6 +167,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
     private JComboBox<String> targetBox() {
         String[] targets = state.players.stream()
             .filter(p -> !p.equals(state.myName))
+            .filter(p -> !state.deadPlayers.contains(p))
             .toArray(String[]::new);
         JComboBox<String> box = new JComboBox<>(targets);
         box.setPreferredSize(new Dimension(160, 26));

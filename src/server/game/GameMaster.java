@@ -32,6 +32,12 @@ public class GameMaster {
         this.stateManager = new GameStateManager(this);
     }
 
+    // ── helper transitions ─────────────────────────────────────────────────
+    public void startInitialDay() {
+        // 初日の配役後に昼へ移行するための共通処理
+        stateManager.beginDayDiscussion();
+    }
+
     public void pushService(ServiceType type) {
         queue.offer(type);
     }
@@ -45,9 +51,10 @@ public class GameMaster {
     // ── condition checks (called by GameStateManager.check) ─────────────────
 
     public boolean allNightActionsComplete() {
-        if (stateManager.isFirstNight()) {
-            return nightActionRepository.getSeerTarget().isPresent();
-        }
+        // Do not short-circuit on the first night: require all present roles
+        // to submit their actions before advancing. The previous special-case
+        // caused the Seer alone to trigger the morning when wolves/knight
+        // existed but hadn't acted yet.
         List<Player> alive = playerRepository.getAlivePlayers();
         boolean hasWolf   = alive.stream().anyMatch(p -> p.role == Role.WOLF);
         boolean hasSeer   = alive.stream().anyMatch(p -> p.role == Role.SEER);

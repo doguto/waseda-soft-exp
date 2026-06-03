@@ -20,7 +20,15 @@ public class NightActionRepository {
 
     public void saveWolfAttack(String wolfName, String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.wolfAttacks.put(wolfName, targetName);
+        if (room != null) {
+            // 各狼は1夜につき1回だけ登録する
+            room.wolfAttacks.putIfAbsent(wolfName, targetName);
+        }
+    }
+
+    public boolean hasWolfAttacked(String wolfName) {
+        RoomData room = db.getRoom(roomId);
+        return room != null && room.wolfAttacks.containsKey(wolfName);
     }
 
     public boolean allWolvesAttacked() {
@@ -49,7 +57,7 @@ public class NightActionRepository {
 
     public void saveSeerTarget(String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.seerTarget = targetName;
+        if (room != null && room.seerTarget == null) room.seerTarget = targetName;
     }
 
     public Optional<String> getSeerTarget() {
@@ -59,7 +67,7 @@ public class NightActionRepository {
 
     public void saveKnightTarget(String targetName) {
         RoomData room = db.getRoom(roomId);
-        if (room != null) room.knightTarget = targetName;
+        if (room != null && room.knightTarget == null) room.knightTarget = targetName;
     }
 
     public Optional<String> getKnightTarget() {

@@ -18,6 +18,8 @@ public class CreateRoomService extends BaseService {
         String message;
         if (success) {
             success = roomRepository.addPlayer(roomId, new Player(msg.name));
+            // 作成者をホストとして記録
+            roomRepository.setHost(roomId, msg.name);
             message = "SUCCESS : The room has been successfully created.\n"
                     + "Room ID : " + roomId + "\n"
                     + "Player Name :" + msg.name;

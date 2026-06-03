@@ -7,6 +7,7 @@ import src.client.state.GameState;
 import src.message.*;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.StringJoiner;
 
 public class NoonActionPresenter {
     private final GameState state;
@@ -35,23 +36,82 @@ public class NoonActionPresenter {
 
     /** 投票リクエスト。受け付け確認を待って true を返す。 */
     public CompletableFuture<Boolean> sendVote(String target) {
+        if (state.hasVoted) {
+            return java.util.concurrent.CompletableFuture.completedFuture(false);
+        }
         VoteMessage m = new VoteMessage();
         m.roomId = state.roomId;
         m.playerName = state.myName;
         m.targetName = target;
         return session.sendRequest(m, VoteResultMessage.MessageType)
             .thenApply(node -> {
-                log("[投票] 投票を受け付けました");
+                boolean success = node.has("success") ? node.get("success").asBoolean() : true;
+                if (success) {
+                    state.hasVoted = true;
+                    log("[投票] 投票を受け付けました");
+                } else {
+                    String message = node.has("message") ? node.get("message").asText() : "投票済みです";
+                    log("[投票] " + message);
+                }
                 state.notifyListeners();
-                return true;
+                return success;
             });
     }
 
     // --- サーバーからの自発的なブロードキャストハンドラ ---
 
     public void onDistributeVoteResult(JsonNode node) {
-        String target = node.get("targetName").asText();
-        log("[投票集計] 最多票: " + target);
+        // リセット
+        state.lastVoteTieCandidates.clear();
+        state.lastVoteTopCount = 0;
+
+        log("[システム] 投票が終了しました。");
+
+        JsonNode countsNode = node.get("voteCounts");
+        if (countsNode != null && countsNode.isObject()) {
+            int max = 0;
+            for (var it = countsNode.fieldNames(); it.hasNext(); ) {
+                String name = it.next();
+                int cnt = countsNode.get(name).asInt();
+                if (cnt > max) max = cnt;
+            }
+            java.util.List<String> top = new java.util.ArrayList<>();
+            for (var it = countsNode.fieldNames(); it.hasNext(); ) {
+                String name = it.next();
+                int cnt = countsNode.get(name).asInt();
+                if (cnt == max) top.add(name);
+            }
+
+            if (top.size() > 1) {
+                // 同票のメッセージ形式
+                StringJoiner sj = new StringJoiner(" と ");
+                for (String p : top) sj.add("[" + p + "]");
+                log("[システム] 投票の結果、" + sj.toString() + " が同票（" + max + "票）で最多となりました。");
+                // 抽選開始メッセージ
+                log("[システム] ランダム抽選を行います……");
+
+                state.lastVoteTieCandidates.addAll(top);
+                state.lastVoteTopCount = max;
+            } else if (top.size() == 1) {
+                String target = top.get(0);
+                log("[投票集計] 最多票: " + target + "（" + max + "票）");
+            }
+        } else {
+            String target = node.get("targetName").asText();
+            log("[投票集計] 最多票: " + target);
+        }
+
+        state.notifyListeners();
+    }
+
+    public void onEndDiscussionStatus(JsonNode node) {
+        int votesFor = node.get("votesFor").asInt();
+        int alive = node.get("aliveCount").asInt();
+        int need = node.get("need").asInt();
+        // 更新用フィールドを GameState に持たせる
+        state.endDiscussionFor = votesFor;
+        state.endDiscussionNeed = need;
+        state.endDiscussionAlive = alive;
         state.notifyListeners();
     }
 

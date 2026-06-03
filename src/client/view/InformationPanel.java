@@ -73,6 +73,24 @@ public class InformationPanel extends JPanel implements GameStateListener {
         playerList.setSelectionBackground(new Color(43, 58, 95));
         playerList.setSelectionForeground(TEXT_COLOR);
         playerList.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+
+        // カスタムレンダラ: 死亡者は薄い背景で表示、生存者は夜テーマに合わせる
+        playerList.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
+            JLabel label = (JLabel) new DefaultListCellRenderer()
+                    .getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            boolean dead = state.deadPlayers.contains(value);
+            if (dead) {
+                label.setForeground(new Color(180, 180, 200));
+                label.setBackground(new Color(30, 30, 40));
+                label.setOpaque(true);
+            } else {
+                label.setForeground(TEXT_COLOR);
+                label.setBackground(isSelected ? list.getSelectionBackground() : CONTENT_BG);
+                label.setOpaque(true);
+            }
+            return label;
+        });
+
         JScrollPane playersScroll = new JScrollPane(playerList);
         playersScroll.setOpaque(false);
         playersScroll.getViewport().setOpaque(false);
@@ -131,6 +149,13 @@ public class InformationPanel extends JPanel implements GameStateListener {
         nameLabel.setText("名前: " + (state.myName.isEmpty() ? "-" : state.myName));
         roleLabel.setText("役職: " + (state.myRole == null ? "-" : state.myRole));
         listModel.clear();
-        state.players.forEach(listModel::addElement);
+        // 生存者を先に表示（players に含まれるが deadPlayers に含まれないもの）
+        for (String p : state.players) {
+            if (!state.deadPlayers.contains(p)) listModel.addElement(p);
+        }
+        // その下に死亡者を表示
+        for (String d : state.deadPlayers) {
+            if (!listModel.contains(d)) listModel.addElement(d);
+        }
     }
 }

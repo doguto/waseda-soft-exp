@@ -15,7 +15,10 @@ public class WolfAttackService extends BaseService {
         // stateManager.check(GameEvent.NIGHT_ACTION_SUBMITTED) を呼ぶ
         //   → 全夜アクション完了なら GameStateManager が ANNOUNCE_MORNING をキューに積む
         // 成功を WolfAttackResultMessage に設定して返す
-        
+
+        if (gameMaster.nightActionRepository.hasWolfAttacked(msg.wolfName)) {
+            return new WolfAttackResultMessage(false);
+        }
         gameMaster.nightActionRepository.saveWolfAttack(msg.wolfName, msg.targetName);
 
         // 夜行動が提出されたことを通知

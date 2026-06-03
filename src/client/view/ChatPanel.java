@@ -19,7 +19,7 @@ public class ChatPanel extends JPanel implements GameStateListener {
 
     private final ChatPresenter chatPresenter;
     private final JTextArea logArea     = new JTextArea();
-    private final JTextField inputField = new JTextField();
+    private final JTextField inputField = new JTextField(14);
     private final JButton sendButton    = new JButton("送信");
 
     private final JToggleButton villageTabBtn = new JToggleButton("全体", true);
@@ -143,12 +143,15 @@ public class ChatPanel extends JPanel implements GameStateListener {
             refreshLog(currentState);
         }
 
-        // 全体タブは DAY_DISCUSSION / WAITING のみ送信可
+                // 全体タブは DAY / WAITING のみ送信可
         boolean canSend;
         if (villageTabBtn.isSelected()) {
-            canSend = currentState == null
-                    || currentState.phase == GamePhase.DAY_DISCUSSION
-                    || currentState.phase == GamePhase.WAITING;
+            canSend = currentState != null && (
+                        // 生存者は通常通り送信可
+                        currentState.isAlive && (currentState.phase == GamePhase.DAY_DISCUSSION || currentState.phase == GamePhase.WAITING)
+                // ゲーム終了時は死亡者も含めて全員送信可
+                || currentState.phase == GamePhase.GAME_OVER
+            );
         } else {
             // 人狼・墓地タブはタブが有効な場合のみここに来るので常に送信可
             canSend = true;

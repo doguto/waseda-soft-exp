@@ -3,6 +3,7 @@ package src.server.core;
 public enum ServiceType {
     DISTRIBUTE_ROLE,
     ANNOUNCE_MORNING,
+    DAY_PHASE_START,
     DISTRIBUTE_VOTE_RESULT,
     EXECUTE,
     ANNOUNCE_GAME_OVER,
