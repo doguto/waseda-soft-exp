@@ -32,7 +32,7 @@ public class NightActionPresenter {
                     state.hasNightActionSent = true;
                     log("[夜] 襲撃を実行しました");
                 } else {
-                    String message = node.has("message") ? node.get("message").asText() : "襲撃済みです";
+                    String message = textOrDefault(node, "message", "襲撃を受け付けられませんでした。");
                     log("[夜] " + message);
                 }
                 state.notifyListeners();
@@ -62,7 +62,7 @@ public class NightActionPresenter {
                     boolean isWolf = node.get("isWolf").asBoolean();
                     log("[占い結果] " + t + " は " + (isWolf ? "🐺 人狼！" : "村人側"));
                 } else {
-                    String message = node.has("message") ? node.get("message").asText() : "占い済みです";
+                    String message = textOrDefault(node, "message", "占いを受け付けられませんでした。");
                     log("[夜] " + message);
                 }
                 state.notifyListeners();
@@ -86,7 +86,8 @@ public class NightActionPresenter {
                     state.hasNightActionSent = true;
                     log("[夜] 守護しました");
                 } else {
-                    String message = node.has("message") ? node.get("message").asText() : "守護済みです";
+                    // 拒否理由（自己護衛・連続護衛など）を明示し、再選択を促す
+                    String message = textOrDefault(node, "message", "守護を受け付けられませんでした。別のプレイヤーを選び直してください。");
                     log("[夜] " + message);
                 }
                 state.notifyListeners();
@@ -101,6 +102,15 @@ public class NightActionPresenter {
         boolean isWolf = node.get("isWolf").asBoolean();
         log("[霊媒結果] " + target + " は " + (isWolf ? "🐺 人狼だった！" : "村人側だった"));
         state.notifyListeners();
+    }
+
+    /** message フィールドが欠落/null でも "null" 表示にならないよう既定値を返す。 */
+    private static String textOrDefault(JsonNode node, String field, String def) {
+        if (node != null && node.has(field) && !node.get(field).isNull()) {
+            String v = node.get(field).asText();
+            if (v != null && !v.isEmpty() && !"null".equals(v)) return v;
+        }
+        return def;
     }
 
     private void log(String msg) {

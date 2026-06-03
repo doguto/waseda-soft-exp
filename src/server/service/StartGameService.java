@@ -32,8 +32,13 @@ public class StartGameService extends BaseService {
 
     room.players.removeIf(player -> !activePlayerNames.contains(player.name));
 
-    if (room.players.size() < 4) {
+    if (room.players.size() < src.server.database.repository.RoomRepository.MIN_PLAYERS) {
             return new StartGameResultMessage(false, "プレイヤーが不足しています", java.util.Collections.emptyList());
+        }
+    if (room.players.size() > src.server.database.repository.RoomRepository.MAX_PLAYERS) {
+            return new StartGameResultMessage(false,
+                "プレイヤーが多すぎます（最大" + src.server.database.repository.RoomRepository.MAX_PLAYERS + "人）",
+                java.util.Collections.emptyList());
         }
         // gameMaster.startWorker(broadcaster) でサービスキューのワーカースレッドを起動する
         gameMaster.startWorker(broadcaster);
