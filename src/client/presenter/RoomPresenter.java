@@ -53,6 +53,7 @@ public class RoomPresenter {
                     if (success) {
                         // 即時に自分をローカルリストへ追加する（フェーズはサーバーの RoomSnapshot を待つ）
                         if (!state.players.contains(state.myName)) state.players.add(state.myName);
+                        state.isHost = isCreate;
                         log("【システム】ルームを" + (isCreate ? "作成" : "参加") + "しました: " + state.roomId);
                         state.notifyListeners();
                         return true;
@@ -111,7 +112,7 @@ public class RoomPresenter {
         // 初期フラグをリセット
         state.hasVoted = false;
         state.hasNightActionSent = false;
-        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole + "】 です。");
+        log("【システム】ゲーム開始。あなたの役職は 【" + state.myRole.displayName() + "】 です。");
         state.notifyListeners();
     }
 
@@ -232,8 +233,26 @@ public class RoomPresenter {
         if (state.myRole != null) {
             boolean iWon = state.myRole.isWolfCamp() == wolfCampWon;
             String camp = state.myRole.isWolfCamp() ? "人狼陣営" : "村人陣営";
-            log("[結果] あなたは" + camp + "（" + state.myRole + "）。"
+            log("[結果] あなたは" + camp + "（" + state.myRole.displayName() + "）。"
                     + (iWon ? "勝利しました！" : "敗北しました…"));
+        }
+        // 全プレイヤーの役職を公開する
+        state.finalRoles.clear();
+        JsonNode playersNode = node.get("players");
+        if (playersNode != null && playersNode.isArray()) {
+            log("── 役職公開 ──");
+            for (JsonNode p : playersNode) {
+                String pName = p.get("name").asText();
+                String pRoleStr = p.get("role").asText();
+                String pRoleDisplay;
+                try {
+                    pRoleDisplay = Role.valueOf(pRoleStr).displayName();
+                } catch (IllegalArgumentException e) {
+                    pRoleDisplay = pRoleStr;
+                }
+                state.finalRoles.put(pName, pRoleDisplay);
+                log("  " + pName + ": " + pRoleDisplay);
+            }
         }
         state.phase = GamePhase.GAME_OVER;
         state.notifyListeners();

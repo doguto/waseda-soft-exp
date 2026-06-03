@@ -2,7 +2,9 @@ package src.client.state;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import src.common.GamePhase;
 import src.common.Role;
 
@@ -29,6 +31,10 @@ public class GameState {
     public boolean hasNightActionSent = false;
     // ゲーム終了時の勝利陣営（"WOLF" / "VILLAGER"、未決定なら null）
     public String winner = null;
+    // このクライアントがルームホストかどうか
+    public boolean isHost = false;
+    // ゲーム終了時の全プレイヤー役職公開（playerName → 日本語役職名）
+    public Map<String, String> finalRoles = new HashMap<>();
 
     private final List<GameStateListener> listeners = new ArrayList<>();
 

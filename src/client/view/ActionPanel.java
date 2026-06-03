@@ -34,7 +34,7 @@ public class ActionPanel extends JPanel implements GameStateListener {
             BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
             BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
-        setPreferredSize(new Dimension(0, 80));
+        setPreferredSize(new Dimension(0, 88));
     }
 
     @Override
@@ -64,11 +64,14 @@ public class ActionPanel extends JPanel implements GameStateListener {
     }
 
     private void buildWaitingActions() {
-        JButton startBtn = new JButton("ゲーム開始");
-        startBtn.addActionListener(e -> roomPresenter.requestStartGame());
-        styleButton(startBtn);
-        add(startBtn);
-        add(new JLabel("（ゲーム開始はホストのみ有効）"));
+        if (state.isHost) {
+            JButton startBtn = new JButton("ゲーム開始");
+            startBtn.addActionListener(e -> roomPresenter.requestStartGame());
+            styleButton(startBtn);
+            add(startBtn);
+        } else {
+            add(new JLabel("ホストがゲームを開始するまでお待ちください"));
+        }
     }
 
     private void buildDiscussionActions() {
@@ -82,8 +85,10 @@ public class ActionPanel extends JPanel implements GameStateListener {
         int alive = state.endDiscussionAlive > 0 ? state.endDiscussionAlive : state.players.size();
         int need = state.endDiscussionNeed;
         int remaining = Math.max(0, need - forCount);
-        String label = forCount + " / " + alive + "（過半数まであと " + remaining + "）";
-        add(new JLabel(label));
+        JLabel countLabel = new JLabel("賛成 " + forCount + " / " + alive + "　あと " + remaining + " 票");
+        countLabel.setFont(countLabel.getFont().deriveFont(Font.BOLD, 12f));
+        countLabel.setForeground(remaining == 0 ? new Color(100, 220, 130) : new Color(200, 210, 240));
+        add(countLabel);
     }
 
     private void buildVoteActions() {
