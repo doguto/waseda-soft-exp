@@ -44,6 +44,11 @@ public class JoinRoomService extends BaseService {
                 if (gameMaster != null && gameMaster.getStateManager().getCurrentPhase() != src.common.GamePhase.WAITING) {
                     return new JoinRoomResultMessage(false, "ゲームは既に開始されています");
                 }
+                // 定員に達している場合は拒否する
+                if (roomRepository.isFull(roomId)) {
+                    return new JoinRoomResultMessage(false,
+                        "ルームが満員です（最大" + src.server.database.repository.RoomRepository.MAX_PLAYERS + "人）");
+                }
                 success = roomRepository.addPlayer(roomId, new Player(msg.name));
                 if (success) {
                     message = "SUCCESS : You have successfully entered the room.\n"
