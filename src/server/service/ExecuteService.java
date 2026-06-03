@@ -12,6 +12,8 @@ import src.server.database.repository.VoteRepository.VoteResolution;
 import src.server.game.GameMaster;
 
 public class ExecuteService extends BaseService implements BroadcastService {
+    private static final long NIGHT_PHASE_DELAY_MILLIS = 5000L;
+
     private final Broadcaster broadcaster;
 
     public ExecuteService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -54,7 +56,16 @@ public class ExecuteService extends BaseService implements BroadcastService {
             gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
         } else {
             // 続行なら gameMaster.pushService(ServiceType.NIGHT_PHASE_START) をキューに積む
+            pauseBeforeNightPhase();
             gameMaster.pushService(ServiceType.NIGHT_PHASE_START);
+        }
+    }
+
+    private void pauseBeforeNightPhase() {
+        try {
+            Thread.sleep(NIGHT_PHASE_DELAY_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

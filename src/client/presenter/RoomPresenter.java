@@ -1,6 +1,7 @@
 package src.client.presenter;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import src.client.audio.SfxPlayer;
 import src.client.network.GameSession;
 import src.client.network.MessageReceiver;
 import src.client.network.ServerConnection;
@@ -14,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 public class RoomPresenter {
     private final GameState state;
     private final GameSession session;
+    private final SfxPlayer sfxPlayer = new SfxPlayer();
     private MessageDispatcher dispatcher;
 
     public RoomPresenter(GameState state, GameSession session) {
@@ -118,6 +120,7 @@ public class RoomPresenter {
     public void onNightPhaseStart(JsonNode node) {
         state.phase = GamePhase.NIGHT;
         state.hasNightActionSent = false;
+        sfxPlayer.playWolfAttack();
         log("【システム】夜になりました。");
         state.notifyListeners();
     }
@@ -133,12 +136,14 @@ public class RoomPresenter {
         JsonNode deadNode = node.get("deadPlayerName");
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
+            sfxPlayer.playScream();
             if (!state.deadPlayers.contains(dead)) state.deadPlayers.add(dead);
             if (dead.equals(state.myName)) {
                 state.isAlive = false;
             }
             log("【システム】朝になりました。死体が見つかりました: " + dead + "。");
         } else {
+            sfxPlayer.playWolfAttackFailed();
             log("【システム】朝になりました。死体はありませんでした。");
         }
         // 朝フェーズへ。一定時間後にサーバーから DayPhaseStart が届き昼へ移行する。
@@ -206,6 +211,7 @@ public class RoomPresenter {
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
         // 処刑時に役職は公開しない（役職は霊媒結果やゲーム終了時のみ判明する）
+        sfxPlayer.playScream();
         if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
@@ -219,7 +225,7 @@ public class RoomPresenter {
         } else {
             log("[処刑] " + executed + " が処刑されました");
         }
-        state.phase = GamePhase.NIGHT;
+        state.phase = GamePhase.EXECUTE;
         state.notifyListeners();
     }
 
