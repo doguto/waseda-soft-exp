@@ -13,10 +13,6 @@ public class JoinRoomService extends BaseService {
     }
 
     public JoinRoomResultMessage call(JoinRoomMessage msg, boolean allowRejoin) {
-        // RoomRepository.exists(roomId) でルームの存在を確認する
-        // RoomRepository.getPlayers(roomId) で同名プレイヤーがいないかチェックする
-        // RoomRepository.addPlayer(roomId, new Player(msg.playerName)) でプレイヤーを追加する
-        // 成功/失敗を JoinRoomResultMessage に設定して返す
         boolean success = roomRepository.exists(roomId);
         String message;
 
@@ -31,7 +27,6 @@ public class JoinRoomService extends BaseService {
             }
 
             if (found) {
-                // 既に名前が存在する場合は再入室扱いにできるかを優先して判定
                 if (allowRejoin) {
                     message = "SUCCESS : Rejoined room.";
                     success = true;
@@ -40,14 +35,12 @@ public class JoinRoomService extends BaseService {
                     message = "同一名称のプレイヤーがいます。別の名前を入力してください。";
                 }
             } else {
-                // 新規参加の場合はゲームが既に開始していると拒否する
                 if (gameMaster != null && gameMaster.getStateManager().getCurrentPhase() != src.common.GamePhase.WAITING) {
-                    return new JoinRoomResultMessage(false, "ゲームは既に開始されています");
+                    return new JoinRoomResultMessage(false, "ゲームは既に開始されています。");
                 }
-                // 定員に達している場合は拒否する
                 if (roomRepository.isFull(roomId)) {
                     return new JoinRoomResultMessage(false,
-                        "ルームが満員です（最大" + src.server.database.repository.RoomRepository.MAX_PLAYERS + "人）");
+                        "ルームが満員です(最大" + src.server.database.repository.RoomRepository.MAX_PLAYERS + "人)。");
                 }
                 success = roomRepository.addPlayer(roomId, new Player(msg.name));
                 if (success) {
@@ -59,7 +52,7 @@ public class JoinRoomService extends BaseService {
                 }
             }
         } else {
-            message = "ERROR : No room exists with the specified Room ID.";
+            message = "そのルームIDは存在しません。ルームIDを再確認してください。";
         }
 
         return new JoinRoomResultMessage(success, message);
