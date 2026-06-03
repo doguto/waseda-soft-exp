@@ -132,19 +132,11 @@ public class RoomPresenter {
         JsonNode deadNode = node.get("deadPlayerName");
         if (deadNode != null && !deadNode.isNull()) {
             String dead = deadNode.asText();
-<<<<<<< HEAD
-            if (dead.equals(state.myName)) {
-                state.isAlive = false;
-            }
-            state.players.remove(dead);
-            log("[朝] " + dead + " が死亡しました...");
-=======
             if (!state.deadPlayers.contains(dead)) state.deadPlayers.add(dead);
             if (dead.equals(state.myName)) {
                 state.isAlive = false;
             }
             log("【システム】朝になりました。死体が見つかりました: " + dead + "。");
->>>>>>> origin/main
         } else {
             log("【システム】朝になりました。死体はありませんでした。");
         }
@@ -212,13 +204,6 @@ public class RoomPresenter {
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
         String role = node.get("executedRole").asText();
-<<<<<<< HEAD
-        if (executed.equals(state.myName)) {
-            state.isAlive = false;
-        }
-        state.players.remove(executed);
-        log("[処刑] " + executed + "（" + role + "）が処刑されました");
-=======
         if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
@@ -232,7 +217,6 @@ public class RoomPresenter {
         } else {
             log("[処刑] " + executed + "（" + role + "）が処刑されました");
         }
->>>>>>> origin/main
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();
     }
