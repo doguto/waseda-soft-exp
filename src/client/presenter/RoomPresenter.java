@@ -140,7 +140,8 @@ public class RoomPresenter {
         } else {
             log("【システム】朝になりました。死体はありませんでした。");
         }
-        state.phase = GamePhase.DAY_DISCUSSION;
+        // 朝フェーズへ。一定時間後にサーバーから DayPhaseStart が届き昼へ移行する。
+        state.phase = GamePhase.MORNING;
         state.notifyListeners();
     }
 

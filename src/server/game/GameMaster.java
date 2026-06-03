@@ -2,7 +2,10 @@ package src.server.game;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import src.server.core.Broadcaster;
 import src.server.core.ServiceType;
 import src.server.core.Worker;
@@ -17,6 +20,8 @@ public class GameMaster {
     private final String roomId;
     private final BlockingQueue<ServiceType> queue = new LinkedBlockingQueue<>();
     private final GameStateManager stateManager;
+    // 遅延サービス投入用（朝フェーズの一定時間表示など）。ルームごとに1スレッド。
+    private final ScheduledExecutorService scheduler;
 
     public final NightActionRepository nightActionRepository;
     public final PlayerRepository playerRepository;
@@ -30,6 +35,11 @@ public class GameMaster {
         this.voteRepository = new VoteRepository(roomId);
         this.chatRepository = new ChatRepository(roomId);
         this.stateManager = new GameStateManager(this);
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "game-scheduler-" + roomId);
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     // ── helper transitions ─────────────────────────────────────────────────
@@ -40,6 +50,11 @@ public class GameMaster {
 
     public void pushService(ServiceType type) {
         queue.offer(type);
+    }
+
+    /** 指定ミリ秒後に Worker のキューへサービスを投入する（Worker スレッドはブロックしない）。 */
+    public void scheduleService(ServiceType type, long delayMillis) {
+        scheduler.schedule(() -> queue.offer(type), delayMillis, TimeUnit.MILLISECONDS);
     }
 
     public void startWorker(Broadcaster broadcaster) {

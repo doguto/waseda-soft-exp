@@ -14,6 +14,9 @@ import src.server.game.GameMaster;
 import src.common.GamePhase;
 
 public class AnnounceMorningService extends BaseService implements BroadcastService {
+    /** 朝フェーズ（結果発表）の表示時間。この時間が経過してから昼へ移行する。 */
+    private static final long MORNING_PHASE_MILLIS = 5000;
+
     private final Broadcaster broadcaster;
 
     public AnnounceMorningService(String roomId, GameMaster gameMaster, Broadcaster broadcaster) {
@@ -43,6 +46,9 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
                 deadPlayerName = attackedName;
             }
         }
+
+        // 朝フェーズに遷移する（結果発表中はこの状態を一定時間維持する）
+        gameMaster.getStateManager().setPhase(GamePhase.MORNING);
 
         // 4. 朝の結果を全体通知する
         // MorningAnnouncementMessage が既にある前提。
@@ -84,13 +90,14 @@ public class AnnounceMorningService extends BaseService implements BroadcastServ
                     .ifPresent(medium -> broadcaster.sendTo(medium.name, new MediumResultMessage(executedName, executedWasWolf)));
         }
 
-        // 7. 勝利判定
-        if (gameMaster.playerRepository.wolvesWin() || gameMaster.playerRepository.villagersWin()) {
-            gameMaster.pushService(ServiceType.ANNOUNCE_GAME_OVER);
-        } else {
-            // 朝の発表が終わったら明示的な昼開始サービスをキューに積む
-            gameMaster.pushService(ServiceType.DAY_PHASE_START);
-        }
+        // 7. 勝利判定（次に実行するサービスを決定する）
+        ServiceType nextService =
+                (gameMaster.playerRepository.wolvesWin() || gameMaster.playerRepository.villagersWin())
+                        ? ServiceType.ANNOUNCE_GAME_OVER
+                        : ServiceType.DAY_PHASE_START;
+
+        // 朝の発表を一定時間表示してから次フェーズへ移行する（即時遷移しない）
+        gameMaster.scheduleService(nextService, MORNING_PHASE_MILLIS);
 
         // 朝になったので前回の議論終了リクエストはリセットしてクライアントへ通知する
         try {
