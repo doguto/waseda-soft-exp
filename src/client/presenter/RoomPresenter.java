@@ -205,7 +205,7 @@ public class RoomPresenter {
 
     public void onExecute(JsonNode node) {
         String executed = node.get("executedPlayerName").asText();
-        String role = node.get("executedRole").asText();
+        // 処刑時に役職は公開しない（役職は霊媒結果やゲーム終了時のみ判明する）
         if (!state.deadPlayers.contains(executed)) state.deadPlayers.add(executed);
         if (executed.equals(state.myName)) {
             state.isAlive = false;
@@ -217,7 +217,7 @@ public class RoomPresenter {
             state.lastVoteTieCandidates.clear();
             state.lastVoteTopCount = 0;
         } else {
-            log("[処刑] " + executed + "（" + role + "）が処刑されました");
+            log("[処刑] " + executed + " が処刑されました");
         }
         state.phase = GamePhase.NIGHT;
         state.notifyListeners();
