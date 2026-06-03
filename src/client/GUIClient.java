@@ -2,6 +2,7 @@ package src.client;
 
 import src.client.network.GameSession;
 import src.client.presenter.*;
+import src.client.sound.SoundManager;
 import src.client.state.GameState;
 import src.client.view.MainFrame;
 
@@ -21,6 +22,9 @@ public class GUIClient {
             MessageDispatcher dispatcher = new MessageDispatcher(room, noon, night, chat);
             room.setDispatcher(dispatcher);
             session.setDispatcher(dispatcher);  // sendRequest() 用
+
+            // フェーズ連動BGM（DAY_DISCUSSION / DAY_VOTE で先頭から再生）
+            state.addListener(new SoundManager());
 
             new MainFrame(state, room, noon, night, chat);
         });
