@@ -33,7 +33,7 @@ public class InformationPanel extends JPanel implements GameStateListener {
     private final JLabel phaseImageLabel = new JLabel();
     private final JLabel nameLabel = new JLabel("名前: -");
     private final JLabel roleLabel = new JLabel("役職: -");
-    private final JLabel roleImageLabel = new JLabel();
+    private final RoleImageLabel roleImageLabel = new RoleImageLabel();
 
     public InformationPanel(GameState state) {
         this.gameState = state;
@@ -90,7 +90,6 @@ public class InformationPanel extends JPanel implements GameStateListener {
         playerList.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
         Font baseFont = new Font("Yu Gothic UI", Font.BOLD, 13);
-        @SuppressWarnings("unchecked")
         Font strikeFont = baseFont.deriveFont(Map.of(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON));
         playerList.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
             JLabel label = (JLabel) new DefaultListCellRenderer()
@@ -127,6 +126,71 @@ public class InformationPanel extends JPanel implements GameStateListener {
         return panel;
     }
 
+    /** 高品質縮小描画を行う役職画像ラベル */
+    private static final class RoleImageLabel extends JLabel {
+        private static final long serialVersionUID = 1L;
+        private java.awt.image.BufferedImage img;
+
+        RoleImageLabel() {
+            super();
+            setOpaque(false);
+            // デフォルトの表示領域を確保しておく（以前は setIcon により preferredSize が設定されていた）
+            setPreferredSize(new Dimension(150, 150));
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension d = super.getPreferredSize();
+            if (d == null || d.width == 0 || d.height == 0) {
+                return new Dimension(150, 150);
+            }
+            return d;
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            // 高さを 150px に制限して、北側パネルが過度に広がらないようにする
+            Dimension sup = super.getMaximumSize();
+            int maxWidth = sup == null || sup.width <= 0 ? Integer.MAX_VALUE : sup.width;
+            return new Dimension(maxWidth, 150);
+        }
+
+        void setRole(src.common.Role r) {
+            this.img = r == null ? null : RoleTheme.rawImageFor(r);
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(java.awt.Graphics g) {
+            super.paintComponent(g);
+            if (img == null) return;
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+            try {
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                int iw = img.getWidth(), ih = img.getHeight();
+                int w = getWidth(), h = getHeight();
+                if (w <= 0 || h <= 0) return;
+                double srcRatio = (double) iw / ih;
+                double dstRatio = (double) w / h;
+                int dw, dh;
+                if (srcRatio > dstRatio) {
+                    dw = w;
+                    dh = (int) (w / srcRatio);
+                } else {
+                    dh = h;
+                    dw = (int) (h * srcRatio);
+                }
+                int dx = (w - dw) / 2;
+                int dy = (h - dh) / 2;
+                g2.drawImage(img, dx, dy, dw, dh, null);
+            } finally {
+                g2.dispose();
+            }
+        }
+    }
+
     private void showRoleDescription() {
         Role role = gameState.myRole;
         if (role == null) return;
@@ -157,7 +221,7 @@ public class InformationPanel extends JPanel implements GameStateListener {
         phaseImageLabel.setIcon(PhaseTheme.iconFor(state.phase));
         nameLabel.setText("名前: " + (state.myName.isEmpty() ? "-" : state.myName));
         roleLabel.setText("役職: " + (state.myRole == null ? "-" : state.myRole.displayName()));
-        roleImageLabel.setIcon(RoleTheme.infoIconFor(state.myRole));
+        roleImageLabel.setRole(state.myRole);
         listModel.clear();
         boolean gameOver = state.phase == GamePhase.GAME_OVER;
         for (String p : state.players) {
